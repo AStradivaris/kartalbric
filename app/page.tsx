@@ -150,20 +150,20 @@ export default async function Home() {
         <section id="siralama" className="section tint">
           <div className="section-head">
             <h2>Kulüp sıralaması</h2>
-            <p className="empty">Türkiye Briç Federasyonu masterpoint sıralamasında kulübümüzün oyuncuları.</p>
+            <p className="empty">Kulübümüzün turnuvalarından alınan masterpointlere göre oyuncu sıralaması (Türkiye Briç Federasyonu verileri).</p>
           </div>
           <div className="rank-links">
             {rankingCurrent && (
               <a href={rankingCurrent} className="rank-card" target="_blank" rel="noopener noreferrer">
                 <span className="rank-title">Güncel sıralama</span>
-                <span className="rank-sub">Federasyonun güncel masterpoint sıralaması</span>
+                <span className="rank-sub">Kulübümüzden alınan masterpointler, güncel</span>
                 <span className="rank-go">Federasyonda gör <span aria-hidden="true">&#8599;</span></span>
               </a>
             )}
             {rankingSeason && (
               <a href={rankingSeason} className="rank-card" target="_blank" rel="noopener noreferrer">
                 <span className="rank-title">Sezon sıralaması</span>
-                <span className="rank-sub">Federasyonun sezonluk masterpoint sıralaması</span>
+                <span className="rank-sub">Kulübümüzden bu sezon alınan masterpointler</span>
                 <span className="rank-go">Federasyonda gör <span aria-hidden="true">&#8599;</span></span>
               </a>
             )}

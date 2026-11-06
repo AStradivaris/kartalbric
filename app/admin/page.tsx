@@ -64,12 +64,7 @@ export default function AdminPage() {
 
       {tab === "duyurular" && <Announcements />}
       {tab === "kayitlar" && <Registrations />}
-      {tab === "sonuclar" && (
-        <>
-          <ResultsLink />
-          <Results />
-        </>
-      )}
+      {tab === "sonuclar" && <ResultsLink />}
       {tab === "galeri" && <Gallery />}
       {tab === "iletisim" && <ContactSettings />}
     </main>
@@ -580,8 +575,8 @@ function ResultsLink() {
       error
         ? error.message
         : value
-          ? "Kaydedildi. Sitede \"Tüm sonuçlar\" düğmesi bu adrese gider."
-          : "Bağlantı kaldırıldı, düğme sitede gizlenir."
+          ? "Kaydedildi. Sitedeki \"Sonuçlar\" ve \"Son sonuçlar\" bu adrese gider."
+          : "Bağlantı kaldırıldı, sonuç düğmeleri sitede gizlenir."
     );
   }
 
@@ -600,138 +595,12 @@ function ResultsLink() {
         />
       </div>
       <p className="hint">
-        Doldurursanız sitenin sonuçlar bölümünde "Tüm sonuçlar" düğmesi çıkar ve bu adrese gider.
-        Boş bırakırsanız düğme görünmez.
+        Sitedeki üst menüdeki &quot;Sonuçlar&quot; ve ana sayfadaki &quot;Son sonuçlar&quot; düğmeleri bu adrese
+        gider (yeni sekmede açılır). Boş bırakırsanız ikisi de görünmez.
       </p>
       <button className="btn-admin">Kaydet</button>
       {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
     </form>
-  );
-}
-
-type TournamentItem = { id: string; title: string; played_on: string };
-
-function Results() {
-  const [items, setItems] = useState<TournamentItem[]>([]);
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [rows, setRows] = useState("");
-  const [msg, setMsg] = useState("");
-  const [err, setErr] = useState(false);
-
-  const load = useCallback(async () => {
-    const { data } = await getBrowserSupabase()
-      .from("tournaments")
-      .select("id,title,played_on")
-      .order("played_on", { ascending: false });
-    setItems((data as TournamentItem[]) ?? []);
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  function fail(text: string) {
-    setErr(true);
-    setMsg(text);
-  }
-
-  async function add(e: React.FormEvent) {
-    e.preventDefault();
-    setErr(false);
-    setMsg("");
-
-    // Her satır: "Çift adı; skor". Sıra, satırın sırasıdır.
-    const parsed = rows
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((line, i) => {
-        const cut = line.lastIndexOf(";");
-        const pair = (cut === -1 ? line : line.slice(0, cut)).trim();
-        const raw = cut === -1 ? "" : line.slice(cut + 1).trim().replace(",", ".");
-        const score = raw === "" || Number.isNaN(Number(raw)) ? null : Number(raw);
-        return { rank: i + 1, pair, score };
-      });
-
-    if (parsed.length === 0) return fail("En az bir satır sonuç girin.");
-
-    const sb = getBrowserSupabase();
-    const { data: t, error } = await sb
-      .from("tournaments")
-      .insert({ title: title.trim(), played_on: date })
-      .select("id")
-      .single();
-    if (error || !t) return fail(error?.message ?? "Turnuva eklenemedi.");
-
-    const { error: rowsError } = await sb
-      .from("result_rows")
-      .insert(parsed.map((r) => ({ ...r, tournament_id: t.id })));
-    if (rowsError) {
-      await sb.from("tournaments").delete().eq("id", t.id);
-      return fail(rowsError.message);
-    }
-
-    setTitle("");
-    setRows("");
-    setMsg("Sonuçlar eklendi. Sitede en son tarihli turnuva gösterilir.");
-    load();
-  }
-
-  async function remove(id: string) {
-    if (!confirm("Bu turnuva ve sonuçları silinsin mi?")) return;
-    await getBrowserSupabase().from("tournaments").delete().eq("id", id);
-    load();
-  }
-
-  return (
-    <>
-      <form className="panel" onSubmit={add}>
-        <h2>Yeni turnuva sonucu</h2>
-        <div className="field">
-          <label htmlFor="t-title">Turnuva adı</label>
-          <input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-        </div>
-        <div className="field">
-          <label htmlFor="t-date">Tarih</label>
-          <input id="t-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-        </div>
-        <div className="field">
-          <label htmlFor="t-rows">Sonuçlar</label>
-          <textarea
-            id="t-rows"
-            value={rows}
-            onChange={(e) => setRows(e.target.value)}
-            placeholder={"Ali Yılmaz / Veli Kaya; 58,40\nAyşe Demir / Fatma Şahin; 55,10"}
-            required
-          />
-        </div>
-        <p className="hint">
-          Her satıra bir çift yazın: çift adları, noktalı virgül, skor. Birinci satır 1. sıra olur.
-        </p>
-        <button className="btn-admin">Kaydet</button>
-        {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
-      </form>
-
-      <div className="panel">
-        <h2>Turnuvalar</h2>
-        {items.length === 0 ? (
-          <p>Henüz turnuva yok.</p>
-        ) : (
-          <ul className="list">
-            {items.map((t) => (
-              <li key={t.id}>
-                <div className="meta">
-                  <strong>{t.title}</strong>
-                  <span>{formatDate(t.played_on)}</span>
-                </div>
-                <button className="btn-del" onClick={() => remove(t.id)}>Sil</button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </>
   );
 }
 

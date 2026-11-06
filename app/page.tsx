@@ -2,7 +2,6 @@ import {
   formatDate,
   mapsUrl,
   getAnnouncements,
-  getLatestTournament,
   getPhotos,
   getSettings,
 } from "@/lib/data";
@@ -12,12 +11,14 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 export const revalidate = 60;
 
 export default async function Home() {
-  const [announcements, tournament, photos, settings] = await Promise.all([
+  const [announcements, photos, settings] = await Promise.all([
     getAnnouncements(),
-    getLatestTournament(),
     getPhotos(),
     getSettings(),
   ]);
+
+  const resultsUrl =
+    settings.results_url && /^https?:\/\//.test(settings.results_url) ? settings.results_url : null;
 
   // Google'a kulüp bilgilerini yapılandırılmış biçimde bildirir.
   const structured = {
@@ -57,7 +58,9 @@ export default async function Home() {
         </a>
         <nav className="nav-links">
           <a href="#duyurular">Duyurular</a>
-          <a href="#sonuclar">Sonuçlar</a>
+          {resultsUrl && (
+            <a href={resultsUrl} target="_blank" rel="noopener noreferrer">Sonuçlar</a>
+          )}
           <a href="#galeri">Galeri</a>
           <a href="#iletisim" className="btn solid">İletişim</a>
         </nav>
@@ -77,7 +80,11 @@ export default async function Home() {
           </p>
           <div className="hero-actions">
             <a href="#duyurular" className="btn solid">Duyurular</a>
-            <a href="#sonuclar" className="btn line">Son sonuçlar</a>
+            {resultsUrl && (
+              <a href={resultsUrl} className="btn line" target="_blank" rel="noopener noreferrer">
+                Son sonuçlar
+              </a>
+            )}
           </div>
         </div>
       </section>
@@ -120,57 +127,6 @@ export default async function Home() {
                 )}
               </article>
             ))}
-          </div>
-        )}
-      </section>
-
-      <section id="sonuclar" className="section tint">
-        <div className="section-head">
-          <h2>Turnuva sonuçları</h2>
-          {tournament && (
-            <p className="empty">
-              {tournament.title} · {formatDate(tournament.played_on)}
-            </p>
-          )}
-        </div>
-        {!tournament || tournament.result_rows.length === 0 ? (
-          <p className="empty">Henüz sonuç yok.</p>
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Sıra</th>
-                  <th>Çift</th>
-                  <th className="num">Skor %</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tournament.result_rows.map((r) => (
-                  <tr key={r.rank}>
-                    <td className="rank">{r.rank}</td>
-                    <td>{r.pair}</td>
-                    <td className="num">
-                      {r.score === null
-                        ? "-"
-                        : r.score.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {settings.results_url && /^https?:\/\//.test(settings.results_url) && (
-          <div className="section-link">
-            <a
-              href={settings.results_url}
-              className="btn solid"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Tüm sonuçlar
-            </a>
           </div>
         )}
       </section>

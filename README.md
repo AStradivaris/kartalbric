@@ -20,6 +20,6 @@ Tanımlı değilse site boş durumlarla ("Henüz duyuru yok") açılır.
 ## Durum
 
 - [x] Ana sayfa
-- [ ] Supabase kurulumu
-- [ ] Yönetim paneli
+- [x] Supabase kurulumu
+- [x] Yönetim paneli (/admin)
 - [ ] Yayın ve alan adı

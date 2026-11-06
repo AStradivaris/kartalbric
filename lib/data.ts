@@ -42,6 +42,8 @@ export type Settings = {
   phone?: string;
   email?: string;
   results_url?: string;
+  ranking_current_url?: string;
+  ranking_season_url?: string;
 };
 
 export async function getAnnouncements(limit = 6): Promise<Announcement[]> {

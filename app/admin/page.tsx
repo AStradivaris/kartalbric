@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { formatDate, type Announcement, type Photo } from "@/lib/data";
+import { DEFAULT_RANKING_CURRENT_URL, DEFAULT_RANKING_SEASON_URL } from "@/lib/site";
 
 type Tab = "duyurular" | "kayitlar" | "sonuclar" | "galeri" | "iletisim";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "duyurular", label: "Duyurular" },
   { id: "kayitlar", label: "Kayıtlar" },
-  { id: "sonuclar", label: "Sonuçlar" },
+  { id: "sonuclar", label: "Sonuç ve sıralama" },
   { id: "galeri", label: "Galeri" },
   { id: "iletisim", label: "İletişim" },
 ];
@@ -64,7 +65,7 @@ export default function AdminPage() {
 
       {tab === "duyurular" && <Announcements />}
       {tab === "kayitlar" && <Registrations />}
-      {tab === "sonuclar" && <ResultsLink />}
+      {tab === "sonuclar" && <ResultsAndRankings />}
       {tab === "galeri" && <Gallery />}
       {tab === "iletisim" && <ContactSettings />}
     </main>
@@ -548,7 +549,19 @@ function Registrations() {
   );
 }
 
-function ResultsLink() {
+type LinkSettingProps = {
+  settingKey: string;
+  title: string;
+  label: string;
+  hint: string;
+  savedText: string;
+  clearedText: string;
+  defaultUrl?: string;
+};
+
+// Bir site ayarındaki bağlantıyı (site_settings tablosunda) düzenler.
+// Kayıt hiç yoksa defaultUrl gösterilir; boş kaydedilirse sitede ilgili düğme gizlenir.
+function LinkSetting({ settingKey, title, label, hint, savedText, clearedText, defaultUrl }: LinkSettingProps) {
   const [url, setUrl] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState(false);
@@ -557,10 +570,13 @@ function ResultsLink() {
     getBrowserSupabase()
       .from("site_settings")
       .select("value")
-      .eq("key", "results_url")
+      .eq("key", settingKey)
       .maybeSingle()
-      .then(({ data }) => setUrl((data as { value: string } | null)?.value ?? ""));
-  }, []);
+      .then(({ data }) => {
+        const row = data as { value: string } | null;
+        setUrl(row ? row.value : defaultUrl ?? "");
+      });
+  }, [settingKey, defaultUrl]);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -568,25 +584,20 @@ function ResultsLink() {
     if (value && !/^https?:\/\//i.test(value)) value = `https://${value}`;
     const { error } = await getBrowserSupabase()
       .from("site_settings")
-      .upsert({ key: "results_url", value });
+      .upsert({ key: settingKey, value });
     setErr(!!error);
     setUrl(value);
-    setMsg(
-      error
-        ? error.message
-        : value
-          ? "Kaydedildi. Sitedeki \"Sonuçlar\" ve \"Son sonuçlar\" bu adrese gider."
-          : "Bağlantı kaldırıldı, sonuç düğmeleri sitede gizlenir."
-    );
+    setMsg(error ? error.message : value ? savedText : clearedText);
   }
 
+  const id = `link-${settingKey}`;
   return (
     <form className="panel" onSubmit={save}>
-      <h2>Sonuç sayfası bağlantısı</h2>
+      <h2>{title}</h2>
       <div className="field">
-        <label htmlFor="r-url">Başka sitedeki sonuç adresi</label>
+        <label htmlFor={id}>{label}</label>
         <input
-          id="r-url"
+          id={id}
           type="url"
           inputMode="url"
           placeholder="https://..."
@@ -594,13 +605,50 @@ function ResultsLink() {
           onChange={(e) => setUrl(e.target.value)}
         />
       </div>
-      <p className="hint">
-        Sitedeki üst menüdeki &quot;Sonuçlar&quot; ve ana sayfadaki &quot;Son sonuçlar&quot; düğmeleri bu adrese
-        gider (yeni sekmede açılır). Boş bırakırsanız ikisi de görünmez.
-      </p>
-      <button className="btn-admin">Kaydet</button>
+      <p className="hint">{hint}</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+        <button className="btn-admin">Kaydet</button>
+        {url && /^https?:\/\//i.test(url) && (
+          <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 700, color: "var(--purple)" }}>
+            Bağlantıyı dene
+          </a>
+        )}
+      </div>
       {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
     </form>
+  );
+}
+
+function ResultsAndRankings() {
+  return (
+    <>
+      <LinkSetting
+        settingKey="results_url"
+        title="Sonuç sayfası bağlantısı"
+        label="Başka sitedeki sonuç adresi"
+        hint={"Üst menüdeki \"Sonuçlar\" ve ana sayfadaki \"Son sonuçlar\" düğmeleri bu adrese gider (yeni sekmede açılır). Boş bırakırsanız ikisi de görünmez."}
+        savedText={"Kaydedildi. Sitedeki \"Sonuçlar\" ve \"Son sonuçlar\" bu adrese gider."}
+        clearedText="Bağlantı kaldırıldı, sonuç düğmeleri sitede gizlenir."
+      />
+      <LinkSetting
+        settingKey="ranking_current_url"
+        title="Kulüp güncel sıralaması"
+        label="Federasyon güncel sıralama adresi"
+        hint={"Ana sayfadaki \"Kulüp sıralaması\" bölümünde \"Güncel sıralama\" düğmesi bu adrese gider. Boş bırakırsanız düğme görünmez."}
+        savedText="Kaydedildi."
+        clearedText="Bağlantı kaldırıldı, düğme sitede gizlenir."
+        defaultUrl={DEFAULT_RANKING_CURRENT_URL}
+      />
+      <LinkSetting
+        settingKey="ranking_season_url"
+        title="Kulüp sezon sıralaması"
+        label="Federasyon sezon sıralaması adresi"
+        hint={"\"Sezon sıralaması\" düğmesi bu adrese gider. Yeni sezon başlayınca federasyon sayfasından yeni yılın adresini kopyalayıp buraya yapıştırın."}
+        savedText="Kaydedildi."
+        clearedText="Bağlantı kaldırıldı, düğme sitede gizlenir."
+        defaultUrl={DEFAULT_RANKING_SEASON_URL}
+      />
+    </>
   );
 }
 

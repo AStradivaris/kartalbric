@@ -5,7 +5,13 @@ import {
   getPhotos,
   getSettings,
 } from "@/lib/data";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import {
+  DEFAULT_RANKING_CURRENT_URL,
+  DEFAULT_RANKING_SEASON_URL,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 
 // Yönetim panelinden yapılan değişiklikler en geç 1 dakika içinde sitede görünür.
 export const revalidate = 60;
@@ -19,6 +25,14 @@ export default async function Home() {
 
   const resultsUrl =
     settings.results_url && /^https?:\/\//.test(settings.results_url) ? settings.results_url : null;
+
+  // Ayar hiç kaydedilmemişse federasyon adresleri kullanılır; boş kaydedilmişse düğme gizlenir.
+  const linkOrNull = (v: string | undefined, fallback: string) => {
+    const u = v === undefined ? fallback : v;
+    return u && /^https?:\/\//.test(u) ? u : null;
+  };
+  const rankingCurrent = linkOrNull(settings.ranking_current_url, DEFAULT_RANKING_CURRENT_URL);
+  const rankingSeason = linkOrNull(settings.ranking_season_url, DEFAULT_RANKING_SEASON_URL);
 
   // Google'a kulüp bilgilerini yapılandırılmış biçimde bildirir.
   const structured = {
@@ -61,6 +75,7 @@ export default async function Home() {
           {resultsUrl && (
             <a href={resultsUrl} target="_blank" rel="noopener noreferrer">Sonuçlar</a>
           )}
+          {(rankingCurrent || rankingSeason) && <a href="#siralama">Sıralama</a>}
           <a href="#galeri">Galeri</a>
           <a href="#iletisim" className="btn solid">İletişim</a>
         </nav>
@@ -130,6 +145,31 @@ export default async function Home() {
           </div>
         )}
       </section>
+
+      {(rankingCurrent || rankingSeason) && (
+        <section id="siralama" className="section tint">
+          <div className="section-head">
+            <h2>Kulüp sıralaması</h2>
+            <p className="empty">Türkiye Briç Federasyonu masterpoint sıralamasında kulübümüzün oyuncuları.</p>
+          </div>
+          <div className="rank-links">
+            {rankingCurrent && (
+              <a href={rankingCurrent} className="rank-card" target="_blank" rel="noopener noreferrer">
+                <span className="rank-title">Güncel sıralama</span>
+                <span className="rank-sub">Federasyonun güncel masterpoint sıralaması</span>
+                <span className="rank-go">Federasyonda gör <span aria-hidden="true">&#8599;</span></span>
+              </a>
+            )}
+            {rankingSeason && (
+              <a href={rankingSeason} className="rank-card" target="_blank" rel="noopener noreferrer">
+                <span className="rank-title">Sezon sıralaması</span>
+                <span className="rank-sub">Federasyonun sezonluk masterpoint sıralaması</span>
+                <span className="rank-go">Federasyonda gör <span aria-hidden="true">&#8599;</span></span>
+              </a>
+            )}
+          </div>
+        </section>
+      )}
 
       <section id="galeri" className="section">
         <div className="section-head">

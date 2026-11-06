@@ -132,3 +132,14 @@ td.num { font-weight: 700; }
   .section h2, .contact h2 { font-size: 28px; }
   .nav-links { gap: 16px; }
 }
+
+/* Kulüp sıralaması */
+.rank-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.rank-card {
+  display: flex; flex-direction: column; gap: 8px; padding: 28px; border: 1px solid var(--line);
+  border-radius: 20px; background: #fff; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rank-card:hover { border-color: #cdbfd9; box-shadow: 0 12px 32px rgba(107, 42, 143, 0.10); color: var(--ink); }
+.rank-title { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+.rank-sub { font-size: 15px; color: var(--muted); }
+.rank-go { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--purple); }

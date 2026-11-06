@@ -72,6 +72,14 @@ export default async function Home() {
                 <span className="date">{formatDate(a.published_at)}</span>
                 <h3>{a.title}</h3>
                 <p>{a.body}</p>
+                {a.event_id && (
+                  <div className="card-actions">
+                    {a.registration_events?.is_open && (
+                      <a href={`/kayit/${a.event_id}`} className="btn solid">Kayıt ol</a>
+                    )}
+                    <a href={`/kayit/${a.event_id}#liste`} className="btn line">Kayıt olanlar</a>
+                  </div>
+                )}
               </article>
             ))}
           </div>

@@ -5,10 +5,11 @@ import type { Session } from "@supabase/supabase-js";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { formatDate, type Announcement, type Photo } from "@/lib/data";
 
-type Tab = "duyurular" | "sonuclar" | "galeri" | "iletisim";
+type Tab = "duyurular" | "kayitlar" | "sonuclar" | "galeri" | "iletisim";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "duyurular", label: "Duyurular" },
+  { id: "kayitlar", label: "Kayıtlar" },
   { id: "sonuclar", label: "Sonuçlar" },
   { id: "galeri", label: "Galeri" },
   { id: "iletisim", label: "İletişim" },
@@ -62,6 +63,7 @@ export default function AdminPage() {
       </div>
 
       {tab === "duyurular" && <Announcements />}
+      {tab === "kayitlar" && <Registrations />}
       {tab === "sonuclar" && (
         <>
           <ResultsLink />
@@ -114,14 +116,22 @@ function Announcements() {
   const [body, setBody] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [eventId, setEventId] = useState("");
   const [msg, setMsg] = useState("");
 
   const load = useCallback(async () => {
-    const { data } = await getBrowserSupabase()
+    const sb = getBrowserSupabase();
+    const { data } = await sb
       .from("announcements")
       .select("id,title,body,image_url,published_at")
       .order("published_at", { ascending: false });
     setItems((data as Announcement[]) ?? []);
+    const { data: ev } = await sb
+      .from("registration_events")
+      .select("id,title,event_date,is_open")
+      .order("created_at", { ascending: false });
+    setEvents((ev as EventItem[]) ?? []);
   }, []);
 
   useEffect(() => {
@@ -146,10 +156,11 @@ function Announcements() {
 
     const { error } = await sb
       .from("announcements")
-      .insert({ title: title.trim(), body: body.trim(), image_url });
+      .insert({ title: title.trim(), body: body.trim(), image_url, event_id: eventId || null });
     if (error) return setMsg(error.message);
     setTitle("");
     setBody("");
+    setEventId("");
     setFile(null);
     setFileKey((k) => k + 1);
     setMsg("Duyuru eklendi. Sitede en geç 1 dakika içinde görünür.");
@@ -187,6 +198,19 @@ function Announcements() {
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         </div>
+        <div className="field">
+          <label htmlFor="a-event">Kayıt bağlantısı (isteğe bağlı)</label>
+          <select id="a-event" value={eventId} onChange={(e) => setEventId(e.target.value)}>
+            <option value="">Yok</option>
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>{ev.title}</option>
+            ))}
+          </select>
+        </div>
+        <p className="hint">
+          Bir kayıt seçerseniz duyuruda &quot;Kayıt ol&quot; ve &quot;Kayıt olanlar&quot; düğmeleri çıkar.
+          Kayıt oluşturmak için Kayıtlar sekmesini kullanın.
+        </p>
         <button className="btn-admin">Yayınla</button>
         {msg && <p className="msg">{msg}</p>}
       </form>
@@ -216,6 +240,147 @@ function Announcements() {
           </ul>
         )}
       </div>
+    </>
+  );
+}
+
+type EventItem = { id: string; title: string; event_date: string | null; is_open: boolean };
+type Reg = { id: string; event_id: string; p1_name: string; p2_name: string };
+
+const norm = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
+
+function Registrations() {
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [regs, setRegs] = useState<Reg[]>([]);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState(false);
+
+  const load = useCallback(async () => {
+    const sb = getBrowserSupabase();
+    const [{ data: ev }, { data: rg }] = await Promise.all([
+      sb.from("registration_events").select("id,title,event_date,is_open").order("created_at", { ascending: false }),
+      sb.from("registrations").select("id,event_id,p1_name,p2_name").order("created_at", { ascending: true }),
+    ]);
+    setEvents((ev as EventItem[]) ?? []);
+    setRegs((rg as Reg[]) ?? []);
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function addEvent(e: React.FormEvent) {
+    e.preventDefault();
+    const { error } = await getBrowserSupabase()
+      .from("registration_events")
+      .insert({ title: title.trim(), event_date: date || null });
+    setErr(!!error);
+    if (error) return setMsg(error.message);
+    setTitle("");
+    setDate("");
+    setMsg("Kayıt oluşturuldu. Duyuru eklerken bu kaydı seçebilirsiniz.");
+    load();
+  }
+
+  async function toggleOpen(ev: EventItem) {
+    await getBrowserSupabase().from("registration_events").update({ is_open: !ev.is_open }).eq("id", ev.id);
+    load();
+  }
+
+  async function removeEvent(ev: EventItem) {
+    if (!confirm(`"${ev.title}" ve tüm kayıtları silinsin mi?`)) return;
+    await getBrowserSupabase().from("registration_events").delete().eq("id", ev.id);
+    load();
+  }
+
+  async function removeReg(r: Reg) {
+    if (!confirm(`${r.p1_name} / ${r.p2_name} kaydı silinsin mi?`)) return;
+    await getBrowserSupabase().from("registrations").delete().eq("id", r.id);
+    load();
+  }
+
+  async function copyLink(ev: EventItem) {
+    const link = `${window.location.origin}/kayit/${ev.id}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setErr(false);
+      setMsg("Kayıt bağlantısı kopyalandı.");
+    } catch {
+      setErr(false);
+      setMsg(link);
+    }
+  }
+
+  return (
+    <>
+      <form className="panel" onSubmit={addEvent}>
+        <h2>Yeni kayıt oluştur</h2>
+        <div className="field">
+          <label htmlFor="e-title">Turnuva adı</label>
+          <input id="e-title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        </div>
+        <div className="field">
+          <label htmlFor="e-date">Turnuva tarihi (isteğe bağlı)</label>
+          <input id="e-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <button className="btn-admin">Oluştur</button>
+        {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
+      </form>
+
+      {events.length === 0 ? (
+        <div className="panel"><p>Henüz kayıt oluşturulmadı.</p></div>
+      ) : (
+        events.map((ev) => {
+          const list = regs.filter((r) => r.event_id === ev.id);
+          const counts = new Map<string, number>();
+          for (const r of list) {
+            for (const n of [norm(r.p1_name), norm(r.p2_name)]) counts.set(n, (counts.get(n) ?? 0) + 1);
+          }
+          return (
+            <div className="panel" key={ev.id}>
+              <h2>{ev.title}</h2>
+              <p className="hint" style={{ margin: "-8px 0 16px" }}>
+                {ev.event_date ? `${formatDate(ev.event_date)} · ` : ""}
+                {list.length} çift · kayıt {ev.is_open ? "açık" : "kapalı"}
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                <button className="tab" onClick={() => setOpenId(openId === ev.id ? null : ev.id)}>
+                  {openId === ev.id ? "Listeyi gizle" : "Kayıtları gör"}
+                </button>
+                <button className="tab" onClick={() => copyLink(ev)}>Bağlantıyı kopyala</button>
+                <button className="tab" onClick={() => toggleOpen(ev)}>
+                  {ev.is_open ? "Kaydı kapat" : "Kaydı aç"}
+                </button>
+                <button className="btn-del" onClick={() => removeEvent(ev)}>Sil</button>
+              </div>
+              {openId === ev.id &&
+                (list.length === 0 ? (
+                  <p>Henüz kayıt yok.</p>
+                ) : (
+                  <ul className="list">
+                    {list.map((r, i) => {
+                      const dup = (counts.get(norm(r.p1_name)) ?? 0) > 1 || (counts.get(norm(r.p2_name)) ?? 0) > 1;
+                      return (
+                        <li key={r.id}>
+                          <div className="meta" style={{ flex: 1 }}>
+                            <strong>
+                              {i + 1}. {r.p1_name} / {r.p2_name}
+                            </strong>
+                            {dup && <span className="badge">Tekrar eden isim, kontrol edin</span>}
+                          </div>
+                          <button className="btn-del" onClick={() => removeReg(r)}>Sil</button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ))}
+            </div>
+          );
+        })
+      )}
     </>
   );
 }

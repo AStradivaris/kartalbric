@@ -14,7 +14,8 @@
 .panel { border: 1px solid var(--line); border-radius: 20px; padding: 24px; background: #fff; margin-bottom: 24px; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field label { font-size: 13px; font-weight: 700; color: #5b5466; }
-.field input, .field textarea {
+.badge { display: inline-block; align-self: flex-start; margin-top: 4px; padding: 3px 10px; border-radius: 999px; background: #fdf0d5; color: #7a4b00; font-size: 12px; font-weight: 700; }
+.field select, .field input, .field textarea {
   font: inherit; font-size: 16px; padding: 12px 14px; border: 1.5px solid #d9d0e2; border-radius: 12px;
   background: #fff; color: var(--ink); width: 100%;
 }

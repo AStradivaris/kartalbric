@@ -69,6 +69,36 @@ a:hover { color: var(--purple); }
 .card p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted); white-space: pre-line; }
 .card-img { width: 100%; height: auto; max-height: 640px; object-fit: contain; border-radius: 12px; display: block; background: #f4effa; }
 .section-link { margin-top: 24px; }
+.card-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.card-actions .btn { min-height: 44px; padding: 0 20px; }
+
+/* Kayıt sayfası */
+.reg-wrap { max-width: 720px; margin: 0 auto; padding: 48px 20px 96px; }
+.reg-wrap h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 800; }
+.reg-sub { margin: 0 0 32px; color: var(--muted); font-size: 16px; }
+.form-card { border: 1px solid var(--line); border-radius: 20px; padding: 24px; background: #fff; margin-bottom: 40px; }
+.form-card h2 { margin: 0 0 16px; font-size: 20px; font-weight: 800; }
+.form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.form-field label { font-size: 13px; font-weight: 700; color: #5b5466; }
+.form-field input {
+  font: inherit; font-size: 16px; padding: 12px 14px; border: 1.5px solid #d9d0e2; border-radius: 12px;
+  background: #fff; color: var(--ink); width: 100%;
+}
+.form-field input:focus { outline: 2px solid var(--purple); outline-offset: 1px; }
+.form-msg { margin: 14px 0 0; font-size: 14px; font-weight: 600; color: var(--purple); }
+.form-msg.err { color: #9b2c2c; }
+.btn-submit {
+  min-height: 48px; padding: 0 28px; border: 0; border-radius: 999px; background: var(--purple);
+  color: #fff; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+}
+.btn-submit:disabled { opacity: 0.6; cursor: default; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.pair-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; counter-reset: pair; }
+.pair-list li {
+  counter-increment: pair; display: flex; gap: 14px; align-items: baseline;
+  padding: 14px 18px; border: 1px solid var(--line); border-radius: 14px; background: #fff; font-size: 16px;
+}
+.pair-list li::before { content: counter(pair); font-weight: 800; color: var(--purple); min-width: 28px; }
 .empty { margin: 0; font-size: 16px; color: var(--muted); }
 
 /* Results */

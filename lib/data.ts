@@ -5,7 +5,23 @@ export type Announcement = {
   title: string;
   body: string;
   image_url: string | null;
+  event_id: string | null;
+  registration_events: { is_open: boolean } | null;
   published_at: string;
+};
+
+export type EventItem = {
+  id: string;
+  title: string;
+  event_date: string | null;
+  is_open: boolean;
+};
+
+export type Registration = {
+  id: string;
+  p1_name: string;
+  p2_name: string;
+  created_at: string;
 };
 
 export type ResultRow = { rank: number; pair: string; score: number | null };
@@ -31,11 +47,11 @@ export async function getAnnouncements(limit = 6): Promise<Announcement[]> {
   if (!sb) return [];
   const { data } = await sb
     .from("announcements")
-    .select("id,title,body,image_url,published_at")
+    .select("id,title,body,image_url,event_id,published_at,registration_events(is_open)")
     .eq("published", true)
     .order("published_at", { ascending: false })
     .limit(limit);
-  return (data as Announcement[]) ?? [];
+  return (data as unknown as Announcement[]) ?? [];
 }
 
 export async function getLatestTournament(): Promise<Tournament | null> {
@@ -71,6 +87,28 @@ export async function getSettings(): Promise<Settings> {
     out[row.key] = row.value;
   }
   return out as Settings;
+}
+
+export async function getEvent(id: string): Promise<EventItem | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data } = await sb
+    .from("registration_events")
+    .select("id,title,event_date,is_open")
+    .eq("id", id)
+    .maybeSingle();
+  return (data as EventItem | null) ?? null;
+}
+
+export async function getRegistrations(eventId: string): Promise<Registration[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data } = await sb
+    .from("registrations")
+    .select("id,p1_name,p2_name,created_at")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: true });
+  return (data as Registration[]) ?? [];
 }
 
 export function formatDate(iso: string): string {

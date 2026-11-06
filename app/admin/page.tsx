@@ -62,7 +62,12 @@ export default function AdminPage() {
       </div>
 
       {tab === "duyurular" && <Announcements />}
-      {tab === "sonuclar" && <Results />}
+      {tab === "sonuclar" && (
+        <>
+          <ResultsLink />
+          <Results />
+        </>
+      )}
       {tab === "galeri" && <Gallery />}
       {tab === "iletisim" && <ContactSettings />}
     </main>
@@ -107,12 +112,14 @@ function Announcements() {
   const [items, setItems] = useState<Announcement[]>([]);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileKey, setFileKey] = useState(0);
   const [msg, setMsg] = useState("");
 
   const load = useCallback(async () => {
     const { data } = await getBrowserSupabase()
       .from("announcements")
-      .select("id,title,body,published_at")
+      .select("id,title,body,image_url,published_at")
       .order("published_at", { ascending: false });
     setItems((data as Announcement[]) ?? []);
   }, []);
@@ -124,19 +131,37 @@ function Announcements() {
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    const { error } = await getBrowserSupabase()
+    const sb = getBrowserSupabase();
+
+    let image_url: string | null = null;
+    if (file) {
+      const blob = await shrink(file);
+      const path = `announcements/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error: upError } = await sb.storage
+        .from("gallery")
+        .upload(path, blob, { contentType: blob.type || "image/jpeg" });
+      if (upError) return setMsg(upError.message);
+      image_url = sb.storage.from("gallery").getPublicUrl(path).data.publicUrl;
+    }
+
+    const { error } = await sb
       .from("announcements")
-      .insert({ title: title.trim(), body: body.trim() });
+      .insert({ title: title.trim(), body: body.trim(), image_url });
     if (error) return setMsg(error.message);
     setTitle("");
     setBody("");
+    setFile(null);
+    setFileKey((k) => k + 1);
     setMsg("Duyuru eklendi. Sitede en geç 1 dakika içinde görünür.");
     load();
   }
 
-  async function remove(id: string) {
+  async function remove(a: Announcement) {
     if (!confirm("Bu duyuru silinsin mi?")) return;
-    await getBrowserSupabase().from("announcements").delete().eq("id", id);
+    const sb = getBrowserSupabase();
+    const path = a.image_url?.split("/gallery/")[1];
+    if (path) await sb.storage.from("gallery").remove([path]);
+    await sb.from("announcements").delete().eq("id", a.id);
     load();
   }
 
@@ -152,6 +177,16 @@ function Announcements() {
           <label htmlFor="a-body">Metin</label>
           <textarea id="a-body" value={body} onChange={(e) => setBody(e.target.value)} />
         </div>
+        <div className="field">
+          <label htmlFor="a-image">Fotoğraf (isteğe bağlı)</label>
+          <input
+            key={fileKey}
+            id="a-image"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
         <button className="btn-admin">Yayınla</button>
         {msg && <p className="msg">{msg}</p>}
       </form>
@@ -164,17 +199,80 @@ function Announcements() {
           <ul className="list">
             {items.map((a) => (
               <li key={a.id}>
-                <div className="meta">
+                {a.image_url && (
+                  <img
+                    src={a.image_url}
+                    alt=""
+                    style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 10, flexShrink: 0 }}
+                  />
+                )}
+                <div className="meta" style={{ flex: 1 }}>
                   <strong>{a.title}</strong>
                   <span>{formatDate(a.published_at)}</span>
                 </div>
-                <button className="btn-del" onClick={() => remove(a.id)}>Sil</button>
+                <button className="btn-del" onClick={() => remove(a)}>Sil</button>
               </li>
             ))}
           </ul>
         )}
       </div>
     </>
+  );
+}
+
+function ResultsLink() {
+  const [url, setUrl] = useState("");
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState(false);
+
+  useEffect(() => {
+    getBrowserSupabase()
+      .from("site_settings")
+      .select("value")
+      .eq("key", "results_url")
+      .maybeSingle()
+      .then(({ data }) => setUrl((data as { value: string } | null)?.value ?? ""));
+  }, []);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    let value = url.trim();
+    if (value && !/^https?:\/\//i.test(value)) value = `https://${value}`;
+    const { error } = await getBrowserSupabase()
+      .from("site_settings")
+      .upsert({ key: "results_url", value });
+    setErr(!!error);
+    setUrl(value);
+    setMsg(
+      error
+        ? error.message
+        : value
+          ? "Kaydedildi. Sitede \"Tüm sonuçlar\" düğmesi bu adrese gider."
+          : "Bağlantı kaldırıldı, düğme sitede gizlenir."
+    );
+  }
+
+  return (
+    <form className="panel" onSubmit={save}>
+      <h2>Sonuç sayfası bağlantısı</h2>
+      <div className="field">
+        <label htmlFor="r-url">Başka sitedeki sonuç adresi</label>
+        <input
+          id="r-url"
+          type="url"
+          inputMode="url"
+          placeholder="https://..."
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+      </div>
+      <p className="hint">
+        Doldurursanız sitenin sonuçlar bölümünde "Tüm sonuçlar" düğmesi çıkar ve bu adrese gider.
+        Boş bırakırsanız düğme görünmez.
+      </p>
+      <button className="btn-admin">Kaydet</button>
+      {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
+    </form>
   );
 }
 

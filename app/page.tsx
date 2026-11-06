@@ -66,6 +66,9 @@ export default async function Home() {
           <div className="cards">
             {announcements.map((a) => (
               <article key={a.id} className="card">
+                {a.image_url && (
+                  <img src={a.image_url} alt="" className="card-img" loading="lazy" />
+                )}
                 <span className="date">{formatDate(a.published_at)}</span>
                 <h3>{a.title}</h3>
                 <p>{a.body}</p>
@@ -110,6 +113,18 @@ export default async function Home() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {settings.results_url && /^https?:\/\//.test(settings.results_url) && (
+          <div className="section-link">
+            <a
+              href={settings.results_url}
+              className="btn solid"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Tüm sonuçlar
+            </a>
           </div>
         )}
       </section>

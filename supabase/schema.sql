@@ -5,6 +5,7 @@ create table if not exists announcements (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   body text not null default '',
+  image_url text,
   published boolean not null default true,
   published_at timestamptz not null default now()
 );
@@ -36,7 +37,7 @@ create table if not exists site_settings (
 );
 
 insert into site_settings (key, value) values
-  ('address', ''), ('phone', ''), ('email', '')
+  ('address', ''), ('phone', ''), ('email', ''), ('results_url', '')
 on conflict (key) do nothing;
 
 -- Güvenlik: herkes okuyabilir, yalnızca giriş yapmış yönetici yazabilir.

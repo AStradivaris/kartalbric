@@ -4,6 +4,7 @@ export type Announcement = {
   id: string;
   title: string;
   body: string;
+  image_url: string | null;
   published_at: string;
 };
 
@@ -18,14 +19,19 @@ export type Tournament = {
 
 export type Photo = { id: string; url: string; caption: string | null };
 
-export type Settings = { address?: string; phone?: string; email?: string };
+export type Settings = {
+  address?: string;
+  phone?: string;
+  email?: string;
+  results_url?: string;
+};
 
 export async function getAnnouncements(limit = 6): Promise<Announcement[]> {
   const sb = getSupabase();
   if (!sb) return [];
   const { data } = await sb
     .from("announcements")
-    .select("id,title,body,published_at")
+    .select("id,title,body,image_url,published_at")
     .eq("published", true)
     .order("published_at", { ascending: false })
     .limit(limit);

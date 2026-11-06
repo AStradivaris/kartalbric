@@ -5,6 +5,7 @@ export type Announcement = {
   title: string;
   body: string;
   image_url: string | null;
+  address: string | null;
   event_id: string | null;
   registration_events: { is_open: boolean } | null;
   published_at: string;
@@ -47,7 +48,7 @@ export async function getAnnouncements(limit = 6): Promise<Announcement[]> {
   if (!sb) return [];
   const { data } = await sb
     .from("announcements")
-    .select("id,title,body,image_url,event_id,published_at,registration_events(is_open)")
+    .select("id,title,body,image_url,address,event_id,published_at,registration_events(is_open)")
     .eq("published", true)
     .order("published_at", { ascending: false })
     .limit(limit);
@@ -109,6 +110,12 @@ export async function getRegistrations(eventId: string): Promise<Registration[]>
     .eq("event_id", eventId)
     .order("created_at", { ascending: true });
   return (data as Registration[]) ?? [];
+}
+
+// Adresi Google Haritalar'da arama olarak açan bağlantı.
+export function mapsUrl(address: string): string {
+  const q = address.replace(/\s*\n\s*/g, ", ").trim();
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
 
 export function formatDate(iso: string): string {

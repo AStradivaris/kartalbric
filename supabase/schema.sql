@@ -117,3 +117,6 @@ with check (
 );
 
 notify pgrst, 'reload schema';
+
+-- ---- Duyuru adresi (migrations/003_announcement_address.sql ile aynı) ----
+alter table announcements add column if not exists address text;

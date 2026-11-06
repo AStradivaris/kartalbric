@@ -112,21 +112,26 @@ function Login() {
 
 function Announcements() {
   const [items, setItems] = useState<Announcement[]>([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [editing, setEditing] = useState<Announcement | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [address, setAddress] = useState("");
+  const [eventId, setEventId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [eventId, setEventId] = useState("");
+  const [removeImage, setRemoveImage] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [err, setErr] = useState(false);
 
   const load = useCallback(async () => {
     const sb = getBrowserSupabase();
     const { data } = await sb
       .from("announcements")
-      .select("id,title,body,image_url,published_at")
+      .select("id,title,body,image_url,address,event_id,published_at")
       .order("published_at", { ascending: false });
-    setItems((data as Announcement[]) ?? []);
+    setItems((data as unknown as Announcement[]) ?? []);
     const { data: ev } = await sb
       .from("registration_events")
       .select("id,title,event_date,is_open")
@@ -138,32 +143,91 @@ function Announcements() {
     load();
   }, [load]);
 
-  async function add(e: React.FormEvent) {
+  function reset() {
+    setEditing(null);
+    setTitle("");
+    setBody("");
+    setAddress("");
+    setEventId("");
+    setFile(null);
+    setFileKey((k) => k + 1);
+    setRemoveImage(false);
+  }
+
+  function startEdit(a: Announcement) {
+    setEditing(a);
+    setTitle(a.title);
+    setBody(a.body);
+    setAddress(a.address ?? "");
+    setEventId(a.event_id ?? "");
+    setFile(null);
+    setFileKey((k) => k + 1);
+    setRemoveImage(false);
+    setErr(false);
+    setMsg("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
+    setBusy(true);
+    setErr(false);
+    setMsg("");
     const sb = getBrowserSupabase();
+    const wasEditing = !!editing;
 
-    let image_url: string | null = null;
+    let image_url: string | null = editing?.image_url ?? null;
+    const oldPath = editing?.image_url?.split("/gallery/")[1];
+
     if (file) {
       const blob = await shrink(file);
       const path = `announcements/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
       const { error: upError } = await sb.storage
         .from("gallery")
         .upload(path, blob, { contentType: blob.type || "image/jpeg" });
-      if (upError) return setMsg(upError.message);
+      if (upError) {
+        setErr(true);
+        setMsg(upError.message);
+        setBusy(false);
+        return;
+      }
       image_url = sb.storage.from("gallery").getPublicUrl(path).data.publicUrl;
+    } else if (removeImage) {
+      image_url = null;
     }
 
-    const { error } = await sb
-      .from("announcements")
-      .insert({ title: title.trim(), body: body.trim(), image_url, event_id: eventId || null });
-    if (error) return setMsg(error.message);
-    setTitle("");
-    setBody("");
-    setEventId("");
-    setFile(null);
-    setFileKey((k) => k + 1);
-    setMsg("Duyuru eklendi. Sitede en geç 1 dakika içinde görünür.");
+    const payload = {
+      title: title.trim(),
+      body: body.trim(),
+      image_url,
+      event_id: eventId || null,
+      address: address.trim() || null,
+    };
+
+    const { error } = editing
+      ? await sb.from("announcements").update(payload).eq("id", editing.id)
+      : await sb.from("announcements").insert(payload);
+
+    if (error) {
+      setErr(true);
+      setMsg(error.message);
+      setBusy(false);
+      return;
+    }
+
+    // Fotoğraf değiştirildiyse ya da kaldırıldıysa eskisini depodan sil.
+    if (wasEditing && oldPath && (file || removeImage)) {
+      await sb.storage.from("gallery").remove([oldPath]);
+    }
+
+    reset();
+    setMsg(
+      wasEditing
+        ? "Duyuru güncellendi. Sitede en geç 1 dakika içinde görünür."
+        : "Duyuru eklendi. Sitede en geç 1 dakika içinde görünür."
+    );
+    setBusy(false);
     load();
   }
 
@@ -173,13 +237,14 @@ function Announcements() {
     const path = a.image_url?.split("/gallery/")[1];
     if (path) await sb.storage.from("gallery").remove([path]);
     await sb.from("announcements").delete().eq("id", a.id);
+    if (editing?.id === a.id) reset();
     load();
   }
 
   return (
     <>
-      <form className="panel" onSubmit={add}>
-        <h2>Yeni duyuru</h2>
+      <form className="panel" onSubmit={save}>
+        <h2>{editing ? "Duyuruyu düzenle" : "Yeni duyuru"}</h2>
         <div className="field">
           <label htmlFor="a-title">Başlık</label>
           <input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -188,8 +253,30 @@ function Announcements() {
           <label htmlFor="a-body">Metin</label>
           <textarea id="a-body" value={body} onChange={(e) => setBody(e.target.value)} />
         </div>
+
+        {editing?.image_url && !file && (
+          <div className="field">
+            <label>Şimdiki fotoğraf</label>
+            <img
+              src={editing.image_url}
+              alt=""
+              style={{ width: 160, borderRadius: 12, opacity: removeImage ? 0.35 : 1 }}
+            />
+            <label style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 600 }}>
+              <input
+                type="checkbox"
+                checked={removeImage}
+                onChange={(e) => setRemoveImage(e.target.checked)}
+                style={{ width: 20, height: 20 }}
+              />
+              Fotoğrafı kaldır
+            </label>
+          </div>
+        )}
         <div className="field">
-          <label htmlFor="a-image">Fotoğraf (isteğe bağlı)</label>
+          <label htmlFor="a-image">
+            {editing?.image_url ? "Yeni fotoğraf (seçerseniz eskisinin yerine geçer)" : "Fotoğraf (isteğe bağlı)"}
+          </label>
           <input
             key={fileKey}
             id="a-image"
@@ -198,6 +285,21 @@ function Announcements() {
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         </div>
+
+        <div className="field">
+          <label htmlFor="a-location">Adres (isteğe bağlı)</label>
+          <input
+            id="a-location"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Örn. Kartal Briç Spor Kulübü, Kartal, İstanbul"
+          />
+        </div>
+        <p className="hint">
+          Adres yazarsanız duyuruda &quot;Adres&quot; düğmesi çıkar ve Google Haritalar&apos;da açılır.
+          Mekân adı ve ilçeyi birlikte yazmak doğru yeri bulmayı kolaylaştırır.
+        </p>
+
         <div className="field">
           <label htmlFor="a-event">Kayıt bağlantısı (isteğe bağlı)</label>
           <select id="a-event" value={eventId} onChange={(e) => setEventId(e.target.value)}>
@@ -211,8 +313,18 @@ function Announcements() {
           Bir kayıt seçerseniz duyuruda &quot;Kayıt ol&quot; ve &quot;Kayıt olanlar&quot; düğmeleri çıkar.
           Kayıt oluşturmak için Kayıtlar sekmesini kullanın.
         </p>
-        <button className="btn-admin">Yayınla</button>
-        {msg && <p className="msg">{msg}</p>}
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          <button className="btn-admin" disabled={busy}>
+            {busy ? "Kaydediliyor..." : editing ? "Değişiklikleri kaydet" : "Yayınla"}
+          </button>
+          {editing && (
+            <button type="button" className="tab" onClick={reset} disabled={busy}>
+              Vazgeç
+            </button>
+          )}
+        </div>
+        {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
       </form>
 
       <div className="panel">
@@ -234,7 +346,10 @@ function Announcements() {
                   <strong>{a.title}</strong>
                   <span>{formatDate(a.published_at)}</span>
                 </div>
-                <button className="btn-del" onClick={() => remove(a)}>Sil</button>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <button className="btn-edit" onClick={() => startEdit(a)}>Düzenle</button>
+                  <button className="btn-del" onClick={() => remove(a)}>Sil</button>
+                </div>
               </li>
             ))}
           </ul>

@@ -48,3 +48,7 @@
 
 .msg { font-size: 14px; font-weight: 600; color: var(--purple); margin: 12px 0 0; }
 .msg.err { color: #9b2c2c; }
+.btn-edit {
+  min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #cdbfd9;
+  background: #fff; color: var(--purple); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer;
+}

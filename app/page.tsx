@@ -1,5 +1,6 @@
 import {
   formatDate,
+  mapsUrl,
   getAnnouncements,
   getLatestTournament,
   getPhotos,
@@ -72,12 +73,24 @@ export default async function Home() {
                 <span className="date">{formatDate(a.published_at)}</span>
                 <h3>{a.title}</h3>
                 <p>{a.body}</p>
-                {a.event_id && (
+                {(a.event_id || a.address) && (
                   <div className="card-actions">
-                    {a.registration_events?.is_open && (
+                    {a.event_id && a.registration_events?.is_open && (
                       <a href={`/kayit/${a.event_id}`} className="btn solid">Kayıt ol</a>
                     )}
-                    <a href={`/kayit/${a.event_id}#liste`} className="btn line">Kayıt olanlar</a>
+                    {a.event_id && (
+                      <a href={`/kayit/${a.event_id}#liste`} className="btn line">Kayıt olanlar</a>
+                    )}
+                    {a.address && (
+                      <a
+                        href={mapsUrl(a.address)}
+                        className="btn line"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Adres
+                      </a>
+                    )}
                   </div>
                 )}
               </article>
@@ -162,7 +175,15 @@ export default async function Home() {
         <dl className="contact-list">
           <div>
             <dt>Adres</dt>
-            <dd>{settings.address || "Yakında"}</dd>
+            <dd>
+              {settings.address ? (
+                <a href={mapsUrl(settings.address)} target="_blank" rel="noopener noreferrer">
+                  {settings.address}
+                </a>
+              ) : (
+                "Yakında"
+              )}
+            </dd>
           </div>
           <div>
             <dt>Telefon</dt>

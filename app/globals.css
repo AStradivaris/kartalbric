@@ -122,7 +122,8 @@ td.num { font-weight: 700; }
 .contact-intro p { margin: 0; font-size: 16px; line-height: 1.6; color: #d9cce4; max-width: 420px; }
 .contact-list { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px; font-size: 16px; }
 .contact-list dt { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c9b3da; margin-bottom: 4px; }
-.contact-list dd { margin: 0; }
+.contact-list dd { margin: 0; white-space: pre-line; }
+.contact-list a { text-decoration: underline; text-underline-offset: 3px; }
 .contact a:hover { color: #fff; text-decoration: underline; }
 
 .footer {

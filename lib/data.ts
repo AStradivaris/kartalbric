@@ -35,7 +35,23 @@ export type Tournament = {
   result_rows: ResultRow[];
 };
 
-export type Photo = { id: string; url: string; caption: string | null };
+export type Photo = {
+  id: string;
+  url: string;
+  caption: string | null;
+  album_id?: string | null;
+  sort_order?: number;
+};
+
+export type Album = {
+  id: string;
+  title: string;
+  album_date: string | null;
+  sort_order: number;
+  photos: Photo[];
+};
+
+export type Gallery = { albums: Album[]; loose: Photo[] };
 
 export type Settings = {
   address?: string;
@@ -72,15 +88,33 @@ export async function getLatestTournament(): Promise<Tournament | null> {
   return { ...t, result_rows: [...t.result_rows].sort((a, b) => a.rank - b.rank) };
 }
 
-export async function getPhotos(limit = 8): Promise<Photo[]> {
+// Albümler (en üstteki ilk) ve içlerindeki fotoğraflar (yükleme/sıra düzeniyle);
+// albüme bağlı olmayan eski fotoğraflar "loose" olarak döner.
+export async function getGallery(): Promise<Gallery> {
   const sb = getSupabase();
-  if (!sb) return [];
-  const { data } = await sb
-    .from("photos")
-    .select("id,url,caption")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  return (data as Photo[]) ?? [];
+  if (!sb) return { albums: [], loose: [] };
+  const [{ data: albums }, { data: loose }] = await Promise.all([
+    sb
+      .from("gallery_albums")
+      .select("id,title,album_date,sort_order,photos(id,url,caption,sort_order,created_at)")
+      .order("sort_order", { ascending: false })
+      .order("created_at", { ascending: false }),
+    sb
+      .from("photos")
+      .select("id,url,caption")
+      .is("album_id", null)
+      .order("created_at", { ascending: false })
+      .limit(24),
+  ]);
+  const sorted = ((albums as unknown as (Album & { photos: (Photo & { created_at: string })[] })[]) ?? []).map(
+    (a) => ({
+      ...a,
+      photos: [...(a.photos ?? [])].sort(
+        (x, y) => (x.sort_order ?? 0) - (y.sort_order ?? 0) || x.created_at.localeCompare(y.created_at)
+      ),
+    })
+  );
+  return { albums: sorted.filter((a) => a.photos.length > 0), loose: (loose as Photo[]) ?? [] };
 }
 
 export async function getSettings(): Promise<Settings> {

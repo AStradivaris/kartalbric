@@ -668,97 +668,458 @@ async function shrink(file: File): Promise<Blob> {
   }
 }
 
+type AdminAlbum = { id: string; title: string; album_date: string | null; sort_order: number };
+type AdminPhoto = {
+  id: string;
+  url: string;
+  caption: string | null;
+  album_id: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
+const storagePath = (url: string) => url.split("/gallery/")[1];
+
+async function uploadToGallery(file: File): Promise<string> {
+  const sb = getBrowserSupabase();
+  const blob = await shrink(file);
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const { error } = await sb.storage
+    .from("gallery")
+    .upload(path, blob, { contentType: blob.type || "image/jpeg" });
+  if (error) throw new Error(error.message);
+  return sb.storage.from("gallery").getPublicUrl(path).data.publicUrl;
+}
+
 function Gallery() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [albums, setAlbums] = useState<AdminAlbum[]>([]);
+  const [photos, setPhotos] = useState<AdminPhoto[]>([]);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await getBrowserSupabase()
-      .from("photos")
-      .select("id,url,caption")
-      .order("created_at", { ascending: false });
-    setPhotos((data as Photo[]) ?? []);
+    const sb = getBrowserSupabase();
+    const [{ data: al, error: alErr }, { data: ph }] = await Promise.all([
+      sb
+        .from("gallery_albums")
+        .select("id,title,album_date,sort_order")
+        .order("sort_order", { ascending: false })
+        .order("created_at", { ascending: false }),
+      sb
+        .from("photos")
+        .select("id,url,caption,album_id,sort_order,created_at")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+    ]);
+    if (alErr) {
+      setErr(true);
+      setMsg("Albüm tablosu bulunamadı. Supabase'de galeri SQL'ini çalıştırdınız mı?");
+    }
+    setAlbums((al as AdminAlbum[]) ?? []);
+    setPhotos((ph as AdminPhoto[]) ?? []);
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  async function upload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    setBusy(true);
+  function report(e: unknown) {
+    setErr(true);
+    setMsg(e instanceof Error ? e.message : String(e));
+  }
+
+  async function createAlbum(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    const top = albums.reduce((m, a) => Math.max(m, a.sort_order ?? 0), 0) + 1;
+    const { error } = await getBrowserSupabase()
+      .from("gallery_albums")
+      .insert({ title: title.trim(), album_date: date || null, sort_order: top });
+    if (error) return report(error.message);
+    setTitle("");
+    setDate("");
     setErr(false);
-    setMsg("");
+    setMsg("Albüm oluşturuldu. Aşağıdan fotoğraf ekleyebilirsiniz.");
+    load();
+  }
+
+  async function moveAlbum(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= albums.length) return;
+    const next = [...albums];
+    [next[index], next[target]] = [next[target], next[index]];
+    const renumbered = next.map((a, i) => ({ ...a, sort_order: next.length - i }));
+    setAlbums(renumbered);
+    setBusy(true);
     const sb = getBrowserSupabase();
-    let done = 0;
-
-    for (const file of files) {
-      const blob = await shrink(file);
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-      const { error } = await sb.storage
-        .from("gallery")
-        .upload(path, blob, { contentType: blob.type || "image/jpeg" });
-      if (error) {
-        setErr(true);
-        setMsg(error.message);
-        break;
-      }
-      const { data } = sb.storage.from("gallery").getPublicUrl(path);
-      const { error: dbError } = await sb.from("photos").insert({ url: data.publicUrl });
-      if (dbError) {
-        setErr(true);
-        setMsg(dbError.message);
-        break;
-      }
-      done += 1;
-    }
-
-    if (done > 0 && !err) setMsg(`${done} fotoğraf yüklendi.`);
-    e.target.value = "";
+    const results = await Promise.all(
+      renumbered.map((a) => sb.from("gallery_albums").update({ sort_order: a.sort_order }).eq("id", a.id))
+    );
     setBusy(false);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      report(failed.error.message);
+      load();
+    }
+  }
+
+  async function deleteAlbum(album: AdminAlbum) {
+    const inside = photos.filter((p) => p.album_id === album.id);
+    if (!confirm(`"${album.title}" albümü ve içindeki ${inside.length} fotoğraf silinsin mi?`)) return;
+    const sb = getBrowserSupabase();
+    const paths = inside.map((p) => storagePath(p.url)).filter(Boolean) as string[];
+    if (paths.length) await sb.storage.from("gallery").remove(paths);
+    const { error } = await sb.from("gallery_albums").delete().eq("id", album.id);
+    if (error) return report(error.message);
     load();
   }
 
-  async function remove(p: Photo) {
-    if (!confirm("Bu fotoğraf silinsin mi?")) return;
-    const sb = getBrowserSupabase();
-    const path = p.url.split("/gallery/")[1];
-    if (path) await sb.storage.from("gallery").remove([path]);
-    await sb.from("photos").delete().eq("id", p.id);
-    load();
-  }
+  const loose = photos.filter((p) => !p.album_id);
 
   return (
     <>
-      <div className="panel">
-        <h2>Fotoğraf ekle</h2>
+      <form className="panel" onSubmit={createAlbum}>
+        <h2>Yeni albüm</h2>
         <div className="field">
-          <label htmlFor="g-files">Fotoğraflar (birden fazla seçebilirsiniz)</label>
-          <input id="g-files" type="file" accept="image/*" multiple onChange={upload} disabled={busy} />
+          <label htmlFor="al-title">Albüm başlığı</label>
+          <input
+            id="al-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Örn. Sezon Açılış Turnuvası"
+            required
+          />
         </div>
-        {busy && <p className="msg">Yükleniyor...</p>}
+        <div className="field">
+          <label htmlFor="al-date">Tarih (isteğe bağlı)</label>
+          <input id="al-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <button className="btn-admin">Albüm oluştur</button>
         {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
-      </div>
+      </form>
 
-      <div className="panel">
-        <h2>Galeri</h2>
-        {photos.length === 0 ? (
-          <p>Henüz fotoğraf yok.</p>
-        ) : (
+      {albums.length === 0 && (
+        <div className="panel">
+          <p>Henüz albüm yok. Önce yukarıdan bir albüm oluşturun.</p>
+        </div>
+      )}
+
+      {albums.map((album, i) => (
+        <AlbumPanel
+          key={album.id}
+          album={album}
+          photos={photos.filter((p) => p.album_id === album.id)}
+          canUp={i > 0 && !busy}
+          canDown={i < albums.length - 1 && !busy}
+          onUp={() => moveAlbum(i, -1)}
+          onDown={() => moveAlbum(i, 1)}
+          onDelete={() => deleteAlbum(album)}
+          onChanged={load}
+          onError={report}
+        />
+      ))}
+
+      {loose.length > 0 && (
+        <div className="panel">
+          <h2>Albümsüz fotoğraflar</h2>
+          <p className="hint" style={{ margin: "-8px 0 16px" }}>
+            Bunlar albümler eklenmeden önce yüklenen fotoğraflar. Sitede &quot;Diğer fotoğraflar&quot; başlığı
+            altında görünürler. İsterseniz bir albüme taşıyın.
+          </p>
           <div className="thumbs">
-            {photos.map((p) => (
-              <div key={p.id} className="thumb">
-                <img src={p.url} alt={p.caption ?? "Kulüp fotoğrafı"} />
-                <button className="btn-del" onClick={() => remove(p)}>Sil</button>
-              </div>
+            {loose.map((p) => (
+              <PhotoTile
+                key={p.id}
+                photo={p}
+                albums={albums}
+                onChanged={load}
+                onError={report}
+              />
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
+  );
+}
+
+function AlbumPanel({
+  album,
+  photos,
+  canUp,
+  canDown,
+  onUp,
+  onDown,
+  onDelete,
+  onChanged,
+  onError,
+}: {
+  album: AdminAlbum;
+  photos: AdminPhoto[];
+  canUp: boolean;
+  canDown: boolean;
+  onUp: () => void;
+  onDown: () => void;
+  onDelete: () => void;
+  onChanged: () => void;
+  onError: (e: unknown) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(album.title);
+  const [date, setDate] = useState(album.album_date ?? "");
+  const [caption, setCaption] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileKey, setFileKey] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [moving, setMoving] = useState(false);
+
+  async function saveInfo(e: React.FormEvent) {
+    e.preventDefault();
+    const { error } = await getBrowserSupabase()
+      .from("gallery_albums")
+      .update({ title: title.trim(), album_date: date || null })
+      .eq("id", album.id);
+    if (error) return onError(error.message);
+    setEditing(false);
+    onChanged();
+  }
+
+  async function upload(e: React.FormEvent) {
+    e.preventDefault();
+    if (files.length === 0) return;
+    setUploading(true);
+    const sb = getBrowserSupabase();
+    let order = photos.reduce((m, p) => Math.max(m, p.sort_order ?? 0), 0);
+    try {
+      for (const file of files) {
+        const url = await uploadToGallery(file);
+        order += 1;
+        const { error } = await sb.from("photos").insert({
+          url,
+          caption: caption.trim() || null,
+          album_id: album.id,
+          sort_order: order,
+        });
+        if (error) throw new Error(error.message);
+      }
+      setCaption("");
+      setFiles([]);
+      setFileKey((k) => k + 1);
+    } catch (err) {
+      onError(err);
+    }
+    setUploading(false);
+    onChanged();
+  }
+
+  async function movePhoto(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= photos.length) return;
+    const next = [...photos];
+    [next[index], next[target]] = [next[target], next[index]];
+    setMoving(true);
+    const sb = getBrowserSupabase();
+    const results = await Promise.all(
+      next.map((p, i) => sb.from("photos").update({ sort_order: i + 1 }).eq("id", p.id))
+    );
+    setMoving(false);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) onError(failed.error.message);
+    onChanged();
+  }
+
+  return (
+    <div className="panel">
+      <div className="album-admin-head">
+        <div className="order-btns">
+          <button className="btn-arrow" aria-label={`${album.title}: yukarı taşı`} disabled={!canUp} onClick={onUp}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
+          </button>
+          <button className="btn-arrow" aria-label={`${album.title}: aşağı taşı`} disabled={!canDown} onClick={onDown}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+        </div>
+        <div className="meta" style={{ flex: 1, minWidth: 0 }}>
+          <h2 style={{ margin: 0 }}>{album.title}</h2>
+          <span className="hint" style={{ margin: 0 }}>
+            {album.album_date ? `${formatDate(album.album_date)} · ` : ""}
+            {photos.length} fotoğraf
+            {photos.length === 0 ? " · fotoğraf eklenene kadar sitede görünmez" : ""}
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button className="btn-edit" onClick={() => setEditing((v) => !v)}>
+            {editing ? "Vazgeç" : "Düzenle"}
+          </button>
+          <button className="btn-del" onClick={onDelete}>Sil</button>
+        </div>
+      </div>
+
+      {editing && (
+        <form onSubmit={saveInfo} style={{ marginTop: 16 }}>
+          <div className="field">
+            <label htmlFor={`t-${album.id}`}>Albüm başlığı</label>
+            <input id={`t-${album.id}`} value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor={`d-${album.id}`}>Tarih (isteğe bağlı)</label>
+            <input id={`d-${album.id}`} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <button className="btn-admin">Kaydet</button>
+        </form>
+      )}
+
+      <form onSubmit={upload} className="album-upload">
+        <div className="field">
+          <label htmlFor={`c-${album.id}`}>Fotoğraf açıklaması</label>
+          <input
+            id={`c-${album.id}`}
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Örn. Genel 1."
+          />
+        </div>
+        <div className="field">
+          <label htmlFor={`f-${album.id}`}>Fotoğraf</label>
+          <input
+            key={fileKey}
+            id={`f-${album.id}`}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+          />
+        </div>
+        <p className="hint">
+          Her fotoğrafı açıklamasıyla tek tek ekleyin (Genel 1., Mix 1., Kadın 1. gibi). Birden fazla seçerseniz
+          hepsine aynı açıklama yazılır, sonra aşağıdan tek tek değiştirebilirsiniz.
+        </p>
+        <button className="btn-admin" disabled={uploading || files.length === 0}>
+          {uploading ? "Yükleniyor..." : "Fotoğrafı ekle"}
+        </button>
+      </form>
+
+      {photos.length > 0 && (
+        <div className="thumbs" style={{ marginTop: 20 }}>
+          {photos.map((p, i) => (
+            <PhotoTile
+              key={p.id}
+              photo={p}
+              onChanged={onChanged}
+              onError={onError}
+              onLeft={i > 0 && !moving ? () => movePhoto(i, -1) : undefined}
+              onRight={i < photos.length - 1 && !moving ? () => movePhoto(i, 1) : undefined}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhotoTile({
+  photo,
+  albums,
+  onChanged,
+  onError,
+  onLeft,
+  onRight,
+}: {
+  photo: AdminPhoto;
+  albums?: AdminAlbum[];
+  onChanged: () => void;
+  onError: (e: unknown) => void;
+  onLeft?: () => void;
+  onRight?: () => void;
+}) {
+  const [caption, setCaption] = useState(photo.caption ?? "");
+  const [saved, setSaved] = useState(false);
+  const dirty = caption.trim() !== (photo.caption ?? "");
+
+  useEffect(() => {
+    setCaption(photo.caption ?? "");
+  }, [photo.caption]);
+
+  async function saveCaption() {
+    if (!dirty) return;
+    const { error } = await getBrowserSupabase()
+      .from("photos")
+      .update({ caption: caption.trim() || null })
+      .eq("id", photo.id);
+    if (error) return onError(error.message);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+    onChanged();
+  }
+
+  async function moveTo(albumId: string) {
+    if (!albumId) return;
+    const { error } = await getBrowserSupabase().from("photos").update({ album_id: albumId }).eq("id", photo.id);
+    if (error) return onError(error.message);
+    onChanged();
+  }
+
+  async function remove() {
+    if (!confirm("Bu fotoğraf silinsin mi?")) return;
+    const sb = getBrowserSupabase();
+    const path = storagePath(photo.url);
+    if (path) await sb.storage.from("gallery").remove([path]);
+    const { error } = await sb.from("photos").delete().eq("id", photo.id);
+    if (error) return onError(error.message);
+    onChanged();
+  }
+
+  const showArrows = onLeft !== undefined || onRight !== undefined || albums === undefined;
+
+  return (
+    <div className="thumb">
+      <img src={photo.url} alt={photo.caption ?? "Galeri fotoğrafı"} />
+      <label className="sr-only" htmlFor={`cap-${photo.id}`}>Açıklama</label>
+      <input
+        id={`cap-${photo.id}`}
+        className="cap-input"
+        value={caption}
+        placeholder="Açıklama yok"
+        onChange={(e) => setCaption(e.target.value)}
+        onBlur={saveCaption}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+      />
+      {saved && <span className="saved">Kaydedildi</span>}
+      {albums && albums.length > 0 && (
+        <select
+          className="cap-input"
+          aria-label="Albüme taşı"
+          value=""
+          onChange={(e) => moveTo(e.target.value)}
+        >
+          <option value="">Albüme taşı...</option>
+          {albums.map((a) => (
+            <option key={a.id} value={a.id}>{a.title}</option>
+          ))}
+        </select>
+      )}
+      <div className="thumb-actions">
+        {showArrows && albums === undefined && (
+          <>
+            <button className="btn-arrow" aria-label="Sola taşı" disabled={!onLeft} onClick={onLeft}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+            </button>
+            <button className="btn-arrow" aria-label="Sağa taşı" disabled={!onRight} onClick={onRight}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+            </button>
+          </>
+        )}
+        <button className="btn-del" style={{ marginLeft: "auto" }} onClick={remove}>Sil</button>
+      </div>
+    </div>
   );
 }
 

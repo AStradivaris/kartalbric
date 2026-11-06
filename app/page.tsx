@@ -2,7 +2,7 @@ import {
   formatDate,
   mapsUrl,
   getAnnouncements,
-  getPhotos,
+  getGallery,
   getSettings,
 } from "@/lib/data";
 import {
@@ -17,9 +17,9 @@ import {
 export const revalidate = 60;
 
 export default async function Home() {
-  const [announcements, photos, settings] = await Promise.all([
+  const [announcements, gallery, settings] = await Promise.all([
     getAnnouncements(),
-    getPhotos(),
+    getGallery(),
     getSettings(),
   ]);
 
@@ -175,15 +175,47 @@ export default async function Home() {
         <div className="section-head">
           <h2>Galeri</h2>
         </div>
-        {photos.length === 0 ? (
+        {gallery.albums.length === 0 && gallery.loose.length === 0 ? (
           <p className="empty">Henüz fotoğraf yok.</p>
         ) : (
-          <div className="gallery">
-            {photos.map((p) => (
-              <figure key={p.id}>
-                <img src={p.url} alt={p.caption ?? "Kulüp fotoğrafı"} loading="lazy" />
-              </figure>
+          <div className="albums">
+            {gallery.albums.map((album) => (
+              <div key={album.id} className="album">
+                <div className="album-head">
+                  <h3>{album.title}</h3>
+                  {album.album_date && <span>{formatDate(album.album_date)}</span>}
+                </div>
+                <div className="gallery">
+                  {album.photos.map((p) => (
+                    <figure key={p.id}>
+                      <a href={p.url} target="_blank" rel="noopener noreferrer">
+                        <img src={p.url} alt={p.caption ? `${album.title}: ${p.caption}` : album.title} loading="lazy" />
+                      </a>
+                      {p.caption && <figcaption>{p.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
+              </div>
             ))}
+            {gallery.loose.length > 0 && (
+              <div className="album">
+                {gallery.albums.length > 0 && (
+                  <div className="album-head">
+                    <h3>Diğer fotoğraflar</h3>
+                  </div>
+                )}
+                <div className="gallery">
+                  {gallery.loose.map((p) => (
+                    <figure key={p.id}>
+                      <a href={p.url} target="_blank" rel="noopener noreferrer">
+                        <img src={p.url} alt={p.caption ?? "Kulüp fotoğrafı"} loading="lazy" />
+                      </a>
+                      {p.caption && <figcaption>{p.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>

@@ -58,7 +58,8 @@ a:hover { color: var(--purple); }
   border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
   box-shadow: 0 24px 60px rgba(107, 42, 143, 0.12);
 }
-.hero-logo img { width: 78%; height: 78%; object-fit: contain; }
+.hero-logo div { overflow: hidden; width: 260px; }
+.hero-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* Announcements */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }

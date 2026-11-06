@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { formatDate, getEvent, getRegistrations } from "@/lib/data";
 import RegistrationForm from "./RegistrationForm";
@@ -5,9 +6,22 @@ import RegistrationForm from "./RegistrationForm";
 // Liste her açılışta güncel olsun.
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Turnuva kaydı | Kartal Briç" };
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const event = UUID.test(id) ? await getEvent(id) : null;
+  if (!event) return { title: "Turnuva kaydı" };
+  return {
+    title: `${event.title}: Kayıt`,
+    description: `${event.title} için çift olarak kayıt olun ve kayıtlı çiftleri görün. Kartal Briç Spor Kulübü.`,
+    alternates: { canonical: `/kayit/${event.id}` },
+  };
+}
 
 export default async function RegistrationPage({
   params,

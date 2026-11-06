@@ -6,6 +6,7 @@ import {
   getPhotos,
   getSettings,
 } from "@/lib/data";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Yönetim panelinden yapılan değişiklikler en geç 1 dakika içinde sitede görünür.
 export const revalidate = 60;
@@ -18,8 +19,37 @@ export default async function Home() {
     getSettings(),
   ]);
 
+  // Google'a kulüp bilgilerini yapılandırılmış biçimde bildirir.
+  const structured = {
+    "@context": "https://schema.org",
+    "@type": "SportsClub",
+    name: SITE_NAME,
+    alternateName: "Kartal Briç",
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo.jpg`,
+    image: `${SITE_URL}/logo.jpg`,
+    description: SITE_DESCRIPTION,
+    foundingDate: "2002",
+    sport: "Briç",
+    ...(settings.phone ? { telephone: settings.phone } : {}),
+    ...(settings.email ? { email: settings.email } : {}),
+    address: settings.address
+      ? {
+          "@type": "PostalAddress",
+          streetAddress: settings.address.replace(/\s*\n\s*/g, ", "),
+          addressLocality: "Kartal",
+          addressRegion: "İstanbul",
+          addressCountry: "TR",
+        }
+      : { "@type": "PostalAddress", addressLocality: "Kartal", addressRegion: "İstanbul", addressCountry: "TR" },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, "\\u003c") }}
+      />
       <header className="nav">
         <a href="#top" className="brand">
           <img src="/logo.jpg" alt="Kartal Briç Spor Kulübü logosu" />
@@ -35,12 +65,12 @@ export default async function Home() {
 
       <section id="top" className="hero">
         <div className="hero-text">
-          <span className="eyebrow">2002&apos;den beri</span>
-          <h1>
+          <h1 className="eyebrow">Kartal Briç Spor Kulübü · 2002&apos;den beri</h1>
+          <p className="slogan">
             Briç, bir masa
             <br />
             etrafında buluşmaktır.
-          </h1>
+          </p>
           <p>
             Kartal Briç Spor Kulübü; turnuvalar, eğitimler ve haftalık oyunlarla her
             seviyeden oyuncuyu bir araya getirir.

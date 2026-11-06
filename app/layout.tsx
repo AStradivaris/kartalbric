@@ -1,11 +1,36 @@
 import type { Metadata } from "next";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kartal Briç Spor Kulübü",
-  description:
-    "Kartal Briç Spor Kulübü: turnuvalar, eğitimler ve haftalık oyunlarla her seviyeden oyuncu için briç.",
-  icons: { icon: "/logo.jpg" },
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} | Kartal Briç`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Kartal Briç",
+    "Kartal Briç Spor Kulübü",
+    "briç kulübü İstanbul",
+    "briç turnuvası",
+    "briç kursu",
+    "Kartal",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/logo.jpg", alt: `${SITE_NAME} logosu` }],
+  },
+  icons: { icon: "/logo.jpg", apple: "/logo.jpg" },
+  // Google Search Console doğrulama kodu buraya gelecek:
+  // verification: { google: "KOD" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

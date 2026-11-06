@@ -50,11 +50,6 @@ export default async function Home() {
             <a href="#sonuclar" className="btn line">Son sonuçlar</a>
           </div>
         </div>
-        <div className="hero-logo">
-          <div>
-            <img src="/logo.jpg" alt="" />
-          </div>
-        </div>
       </section>
 
       <section id="duyurular" className="section">

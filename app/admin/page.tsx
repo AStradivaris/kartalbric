@@ -129,7 +129,8 @@ function Announcements() {
     const sb = getBrowserSupabase();
     const { data } = await sb
       .from("announcements")
-      .select("id,title,body,image_url,address,event_id,published_at")
+      .select("id,title,body,image_url,address,event_id,published_at,sort_order")
+      .order("sort_order", { ascending: false })
       .order("published_at", { ascending: false });
     setItems((data as unknown as Announcement[]) ?? []);
     const { data: ev } = await sb
@@ -205,9 +206,12 @@ function Announcements() {
       address: address.trim() || null,
     };
 
+    // Yeni duyuru listenin en üstüne eklenir.
+    const topOrder = items.reduce((m, a) => Math.max(m, a.sort_order ?? 0), 0) + 1;
+
     const { error } = editing
       ? await sb.from("announcements").update(payload).eq("id", editing.id)
-      : await sb.from("announcements").insert(payload);
+      : await sb.from("announcements").insert({ ...payload, sort_order: topOrder });
 
     if (error) {
       setErr(true);
@@ -229,6 +233,32 @@ function Announcements() {
     );
     setBusy(false);
     load();
+  }
+
+  const [moving, setMoving] = useState(false);
+
+  // Seçilen duyuruyu bir üste/alta taşır; tüm listeye yukarıdan aşağı azalan sıra numarası verir.
+  async function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    [next[index], next[target]] = [next[target], next[index]];
+    const renumbered = next.map((a, i) => ({ ...a, sort_order: next.length - i }));
+    const changed = renumbered.filter((a, i) => a.sort_order !== next[i].sort_order || a.id !== items[i].id);
+
+    setItems(renumbered);
+    setMoving(true);
+    const sb = getBrowserSupabase();
+    const results = await Promise.all(
+      changed.map((a) => sb.from("announcements").update({ sort_order: a.sort_order }).eq("id", a.id))
+    );
+    setMoving(false);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      setErr(true);
+      setMsg(failed.error.message);
+      load();
+    }
   }
 
   async function remove(a: Announcement) {
@@ -329,12 +359,35 @@ function Announcements() {
 
       <div className="panel">
         <h2>Yayındaki duyurular</h2>
+        {items.length > 1 && (
+          <p className="hint" style={{ margin: "-8px 0 16px" }}>
+            Oklarla sırayı değiştirin. Sitede bu listedeki sırayla, en üstteki ilk görünür.
+          </p>
+        )}
         {items.length === 0 ? (
           <p>Henüz duyuru yok.</p>
         ) : (
           <ul className="list">
-            {items.map((a) => (
+            {items.map((a, i) => (
               <li key={a.id}>
+                <div className="order-btns">
+                  <button
+                    className="btn-arrow"
+                    aria-label={`${a.title}: yukarı taşı`}
+                    disabled={i === 0 || moving}
+                    onClick={() => move(i, -1)}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
+                  </button>
+                  <button
+                    className="btn-arrow"
+                    aria-label={`${a.title}: aşağı taşı`}
+                    disabled={i === items.length - 1 || moving}
+                    onClick={() => move(i, 1)}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                </div>
                 {a.image_url && (
                   <img
                     src={a.image_url}

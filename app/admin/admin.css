@@ -52,3 +52,12 @@
   min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #cdbfd9;
   background: #fff; color: var(--purple); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer;
 }
+.order-btns { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.btn-arrow {
+  width: 36px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: 1.5px solid #cdbfd9; background: #fff; color: var(--purple); cursor: pointer; padding: 0;
+}
+.btn-arrow:disabled { opacity: 0.3; cursor: default; }
+@media (max-width: 520px) {
+  .list li { flex-wrap: wrap; }
+}

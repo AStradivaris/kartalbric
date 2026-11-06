@@ -120,3 +120,6 @@ notify pgrst, 'reload schema';
 
 -- ---- Duyuru adresi (migrations/003_announcement_address.sql ile aynı) ----
 alter table announcements add column if not exists address text;
+
+-- ---- Duyuru sıralaması (migrations/004_announcement_order.sql) ----
+alter table announcements add column if not exists sort_order int not null default 0;

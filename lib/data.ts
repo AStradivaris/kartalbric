@@ -9,6 +9,7 @@ export type Announcement = {
   event_id: string | null;
   registration_events: { is_open: boolean } | null;
   published_at: string;
+  sort_order: number;
 };
 
 export type EventItem = {
@@ -50,6 +51,7 @@ export async function getAnnouncements(limit = 6): Promise<Announcement[]> {
     .from("announcements")
     .select("id,title,body,image_url,address,event_id,published_at,registration_events(is_open)")
     .eq("published", true)
+    .order("sort_order", { ascending: false })
     .order("published_at", { ascending: false })
     .limit(limit);
   return (data as unknown as Announcement[]) ?? [];

@@ -12,6 +12,7 @@ import {
   SITE_NAME,
   SITE_URL,
 } from "@/lib/site";
+import SectionLinks from "./SectionLinks";
 
 // Yönetim panelinden yapılan değişiklikler en geç 1 dakika içinde sitede görünür.
 export const revalidate = 60;
@@ -65,8 +66,9 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, "\\u003c") }}
       />
+      <SectionLinks />
       <header className="nav">
-        <a href="#top" className="brand">
+        <a href="/" className="brand" aria-label="Kartal Briç ana sayfa (yenile)">
           <img src="/logo.jpg" alt="Kartal Briç Spor Kulübü logosu" />
           <span>Kartal Briç</span>
         </a>

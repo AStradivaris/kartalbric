@@ -153,3 +153,27 @@ td.num { font-weight: 700; }
 .gallery figure a { display: block; border-radius: 16px; overflow: hidden; }
 .gallery figure a:hover img { opacity: 0.92; }
 .gallery figcaption { font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; }
+
+/* Kayan duyuru şeridi: masaüstünde menü satırının altında, telefonda logonun hemen altında */
+.ticker {
+  order: 3; flex: 0 0 calc(100% + 96px); margin: 4px -48px -16px; overflow: hidden; display: block;
+  background: var(--purple); color: #fff; font-size: 15px; font-weight: 700; white-space: nowrap;
+}
+.ticker:hover, .ticker:focus-visible { color: #fff; }
+.ticker:focus-visible { outline: 3px solid #f2c94c; outline-offset: -3px; }
+.nav .brand { order: 1; }
+.nav .nav-links { order: 2; }
+.ticker-track { display: inline-flex; min-height: 44px; align-items: center; animation: ticker-scroll linear infinite; will-change: transform; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.ticker-item { display: inline-flex; align-items: center; gap: 10px; padding: 0 48px; }
+.ticker-cta { padding: 4px 12px; border-radius: 999px; background: #fff; color: var(--purple); font-size: 13px; }
+@keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+  .ticker-item + .ticker-item { display: none; }
+  .ticker { white-space: normal; }
+}
+@media (max-width: 640px) {
+  .ticker { order: 2; flex-basis: calc(100% + 40px); margin: 0 -20px; }
+  .nav .nav-links { order: 3; }
+}

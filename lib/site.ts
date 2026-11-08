@@ -8,3 +8,8 @@ export const SITE_DESCRIPTION =
 export const DEFAULT_RANKING_CURRENT_URL = "https://mp.tbricfed.org.tr/ranking?mode=guncel&club=109";
 export const DEFAULT_RANKING_SEASON_URL =
   "https://mp.tbricfed.org.tr/ranking?mode=sezon&years%5B%5D=2026&club=109";
+
+// Ana sayfadaki kayan duyuru (admin panelinden değiştirilebilir/kapatılabilir; bunlar varsayılandır).
+export const DEFAULT_TICKER_TEXT =
+  "ÖNEMLİ: 6 Aralık 15. Atatürk'ü Anma Briç Turnuvası'na lütfen kayıt olunuz";
+export const DEFAULT_TICKER_URL = "/kayit/ca55e988-755f-4be1-b456-f22a657c958f";

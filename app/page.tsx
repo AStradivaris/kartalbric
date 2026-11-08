@@ -8,11 +8,14 @@ import {
 import {
   DEFAULT_RANKING_CURRENT_URL,
   DEFAULT_RANKING_SEASON_URL,
+  DEFAULT_TICKER_TEXT,
+  DEFAULT_TICKER_URL,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_URL,
 } from "@/lib/site";
 import SectionLinks from "./SectionLinks";
+import Ticker from "./Ticker";
 
 // Yönetim panelinden yapılan değişiklikler en geç 1 dakika içinde sitede görünür.
 export const revalidate = 60;
@@ -34,6 +37,9 @@ export default async function Home() {
   };
   const rankingCurrent = linkOrNull(settings.ranking_current_url, DEFAULT_RANKING_CURRENT_URL);
   const rankingSeason = linkOrNull(settings.ranking_season_url, DEFAULT_RANKING_SEASON_URL);
+  // Kayan yazı: ayar hiç kaydedilmemişse varsayılan; metin boş kaydedilirse şerit gizlenir.
+  const tickerText = (settings.ticker_text ?? DEFAULT_TICKER_TEXT).trim();
+  const tickerUrl = (settings.ticker_url ?? DEFAULT_TICKER_URL).trim() || "#duyurular";
 
   // Google'a kulüp bilgilerini yapılandırılmış biçimde bildirir.
   const structured = {
@@ -72,6 +78,7 @@ export default async function Home() {
           <img src="/logo.jpg" alt="Kartal Briç Spor Kulübü logosu" />
           <span>Kartal Briç</span>
         </a>
+        {tickerText && <Ticker text={tickerText} href={tickerUrl} />}
         <nav className="nav-links">
           <a href="#duyurular">Duyurular</a>
           {resultsUrl && (

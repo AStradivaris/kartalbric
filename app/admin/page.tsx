@@ -4,7 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { formatDate, type Announcement, type Photo } from "@/lib/data";
-import { DEFAULT_RANKING_CURRENT_URL, DEFAULT_RANKING_SEASON_URL } from "@/lib/site";
+import {
+  DEFAULT_RANKING_CURRENT_URL,
+  DEFAULT_RANKING_SEASON_URL,
+  DEFAULT_TICKER_TEXT,
+  DEFAULT_TICKER_URL,
+} from "@/lib/site";
 
 type Tab = "duyurular" | "kayitlar" | "sonuclar" | "galeri" | "iletisim";
 
@@ -63,7 +68,12 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {tab === "duyurular" && <Announcements />}
+      {tab === "duyurular" && (
+        <>
+          <TickerSetting />
+          <Announcements />
+        </>
+      )}
       {tab === "kayitlar" && <Registrations />}
       {tab === "sonuclar" && <ResultsAndRankings />}
       {tab === "galeri" && <Gallery />}
@@ -1120,6 +1130,92 @@ function PhotoTile({
         <button className="btn-del" style={{ marginLeft: "auto" }} onClick={remove}>Sil</button>
       </div>
     </div>
+  );
+}
+
+// Ana sayfadaki kayan yazı: metin + tıklanınca gidilecek bağlantı. Metin boşsa şerit gizlenir.
+function TickerSetting() {
+  const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState(false);
+
+  useEffect(() => {
+    const sb = getBrowserSupabase();
+    sb.from("site_settings")
+      .select("key,value")
+      .in("key", ["ticker_text", "ticker_url"])
+      .then(({ data }) => {
+        const rows = (data as { key: string; value: string }[]) ?? [];
+        const get = (k: string) => rows.find((r) => r.key === k);
+        setText(get("ticker_text")?.value ?? DEFAULT_TICKER_TEXT);
+        setUrl(get("ticker_url")?.value ?? DEFAULT_TICKER_URL);
+      });
+    sb.from("registration_events")
+      .select("id,title,event_date,is_open")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setEvents((data as EventItem[]) ?? []));
+  }, []);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    let link = url.trim();
+    // Sitenin kendi adresi verilirse kısa yol olarak sakla.
+    link = link.replace(/^https?:\/\/(www\.)?kartalbric\.com/i, "");
+    if (link && !link.startsWith("/") && !link.startsWith("#") && !/^https?:\/\//i.test(link)) {
+      link = `https://${link}`;
+    }
+    const { error } = await getBrowserSupabase()
+      .from("site_settings")
+      .upsert([
+        { key: "ticker_text", value: text.trim() },
+        { key: "ticker_url", value: link },
+      ]);
+    setErr(!!error);
+    setUrl(link);
+    setMsg(
+      error
+        ? error.message
+        : text.trim()
+          ? "Kaydedildi. Kayan yazı sitede en geç 1 dakika içinde güncellenir."
+          : "Kayan yazı kapatıldı, sitede görünmez."
+    );
+  }
+
+  return (
+    <form className="panel" onSubmit={save}>
+      <h2>Kayan yazı</h2>
+      <div className="field">
+        <label htmlFor="tk-text">Metin</label>
+        <input id="tk-text" value={text} onChange={(e) => setText(e.target.value)} maxLength={200} />
+      </div>
+      <div className="field">
+        <label htmlFor="tk-url">Tıklanınca gidilecek adres</label>
+        <input id="tk-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/kayit/... veya https://..." />
+      </div>
+      {events.length > 0 && (
+        <div className="field">
+          <label htmlFor="tk-event">Ya da bir kayıt sayfası seçin</label>
+          <select
+            id="tk-event"
+            value=""
+            onChange={(e) => e.target.value && setUrl(`/kayit/${e.target.value}`)}
+          >
+            <option value="">Seçin...</option>
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>{ev.title}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      <p className="hint">
+        Logonun altında kayar. Kapatmak için metni silip kaydedin. Bağlantı bir kayıt sayfasıysa yazının
+        sonunda &quot;Kayıt ol&quot; düğmesi görünür.
+      </p>
+      <button className="btn-admin">Kaydet</button>
+      {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
+    </form>
   );
 }
 

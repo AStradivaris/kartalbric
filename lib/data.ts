@@ -60,6 +60,8 @@ export type Settings = {
   results_url?: string;
   ranking_current_url?: string;
   ranking_season_url?: string;
+  ticker_text?: string;
+  ticker_url?: string;
 };
 
 export async function getAnnouncements(limit = 6): Promise<Announcement[]> {

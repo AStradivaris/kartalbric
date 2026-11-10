@@ -23,10 +23,10 @@ export default function Anma() {
       <section className="anma anma-poster" aria-labelledby="anma-baslik">
         <h2 id="anma-baslik" className="sr-only">{message}</h2>
         <img
-          src="/anma-10-kasim.jpg"
+          src="/anma-10-kasim-v2.jpg"
           width={1080}
           height={1920}
-          alt={`10 Kasım 1938, 09.05. ${message} "Benim naçiz vücudum elbet bir gün toprak olacaktır, fakat Türkiye Cumhuriyeti ilelebet payidar kalacaktır." 1881'den sonsuza. Kartal Briç Spor Kulübü.`}
+          alt={`${message} "Benim naçiz vücudum elbet bir gün toprak olacaktır, fakat Türkiye Cumhuriyeti ilelebet payidar kalacaktır." 1881'den sonsuza. Kartal Briç Spor Kulübü.`}
         />
       </section>
     );
@@ -35,7 +35,6 @@ export default function Anma() {
   return (
     <section className="anma" aria-labelledby="anma-baslik">
       <div className="anma-inner">
-        <p className="anma-date">10 Kasım 1938 · 09.05</p>
         <h2 id="anma-baslik" className="anma-title">
           Gazi Mustafa Kemal Atatürk&apos;ü
           <br />

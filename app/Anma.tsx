@@ -15,6 +15,23 @@ export default function Anma() {
     new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Istanbul", year: "numeric" }).format(new Date())
   );
   const nth = year - 1938;
+  const message = `Gazi Mustafa Kemal Atatürk'ü aramızdan ayrılışının ${nth}. yılında saygı, sevgi ve özlemle anıyoruz.`;
+
+  // Bu yılın afişi varsa (2026) afişi gösterir; diğer yıllarda yazılı anma metni çıkar.
+  if (year === 2026) {
+    return (
+      <section className="anma anma-poster" aria-labelledby="anma-baslik">
+        <h2 id="anma-baslik" className="sr-only">{message}</h2>
+        <img
+          src="/anma-10-kasim.jpg"
+          width={1080}
+          height={1920}
+          alt={`10 Kasım 1938, 09.05. ${message} "Benim naçiz vücudum elbet bir gün toprak olacaktır, fakat Türkiye Cumhuriyeti ilelebet payidar kalacaktır." 1881'den sonsuza. Kartal Briç Spor Kulübü.`}
+        />
+      </section>
+    );
+  }
+
   return (
     <section className="anma" aria-labelledby="anma-baslik">
       <div className="anma-inner">

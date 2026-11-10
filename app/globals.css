@@ -192,3 +192,7 @@ td.num { font-weight: 700; }
   .anma-title { font-size: 24px; }
   .anma-quote { font-size: 15px; }
 }
+.anma-poster { background: #040404; padding: 40px 20px; display: flex; justify-content: center; }
+.anma-poster img { display: block; width: 100%; max-width: 440px; height: auto; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 640px) { .anma-poster { padding: 0; } .anma-poster img { max-width: 100%; } }

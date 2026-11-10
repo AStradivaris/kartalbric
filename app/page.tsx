@@ -16,6 +16,7 @@ import {
 } from "@/lib/site";
 import SectionLinks from "./SectionLinks";
 import Ticker from "./Ticker";
+import Anma, { isAnmaDay } from "./Anma";
 
 // Yönetim panelinden yapılan değişiklikler en geç 1 dakika içinde sitede görünür.
 export const revalidate = 60;
@@ -89,6 +90,8 @@ export default async function Home() {
           <a href="#iletisim" className="btn solid">İletişim</a>
         </nav>
       </header>
+
+      {isAnmaDay() && <Anma />}
 
       <section id="top" className="hero">
         <div className="hero-text">

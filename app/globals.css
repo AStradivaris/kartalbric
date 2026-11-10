@@ -177,3 +177,18 @@ td.num { font-weight: 700; }
   .ticker { order: 2; flex-basis: calc(100% + 40px); margin: 0 -20px; }
   .nav .nav-links { order: 3; }
 }
+
+/* 10 Kasım anma bölümü */
+.anma { background: #111014; color: #fff; padding: 72px 48px; border-bottom: 4px solid #c8102e; }
+.anma-inner { max-width: 860px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.anma-date { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #e8a0ab; }
+.anma-title { margin: 0; font-size: 36px; line-height: 1.25; font-weight: 800; letter-spacing: -0.01em; color: #fff; }
+.anma-quote { margin: 0; max-width: 640px; font-size: 17px; line-height: 1.6; font-style: italic; color: #cfcbd6; }
+.anma-years { margin: 8px 0 0; font-size: 34px; font-weight: 300; letter-spacing: 0.04em; color: #fff; display: flex; align-items: center; gap: 14px; }
+.anma-inf { font-size: 52px; line-height: 1; color: #c8102e; font-weight: 400; }
+.anma-sign { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #a9a4b2; }
+@media (max-width: 640px) {
+  .anma { padding: 48px 20px; }
+  .anma-title { font-size: 24px; }
+  .anma-quote { font-size: 15px; }
+}

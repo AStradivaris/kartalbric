@@ -96,11 +96,22 @@ export default async function Home() {
       <section id="top" className="hero">
         <div className="hero-text">
           <h1 className="eyebrow">Kartal Briç Spor Kulübü · 2002&apos;den beri</h1>
-          <p className="slogan">
-            Briç, bir masa
-            <br />
-            etrafında buluşmaktır.
-          </p>
+          <div className="slogan-block">
+            <p className="slogan">
+              <span className="slogan-lead">Briç:</span> Herkes İçin
+              <br />
+              Bir Akıl Sporu
+            </p>
+            <p className="tagline">
+              <span className="suits" aria-hidden="true">
+                <span>{"\u2660\uFE0E"}</span>
+                <span className="red">{"\u2665\uFE0E"}</span>
+                <span className="red">{"\u2666\uFE0E"}</span>
+                <span>{"\u2663\uFE0E"}</span>
+              </span>
+              İnsanları buluşturur, zihinleri sınar.
+            </p>
+          </div>
           <p>
             Kartal Briç Spor Kulübü; turnuvalar, eğitimler ve haftalık oyunlarla her
             seviyeden oyuncuyu bir araya getirir.

@@ -51,7 +51,7 @@ a:hover { color: var(--purple); }
 .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--purple); }
 .hero h1.eyebrow { margin: 0; }
 .slogan { margin: 0; font-size: 56px; line-height: 1.05; letter-spacing: -0.03em; font-weight: 800; color: var(--ink); }
-.hero p:not(.slogan) { margin: 0; font-size: 18px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.hero p:not(.slogan):not(.tagline) { margin: 0; font-size: 18px; line-height: 1.6; color: var(--muted); max-width: 520px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
 
 /* Announcements */
@@ -196,3 +196,18 @@ td.num { font-weight: 700; }
 .anma-poster img { display: block; width: 100%; max-width: 440px; height: auto; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 640px) { .anma-poster { padding: 0; } .anma-poster img { max-width: 100%; } }
+
+/* Slogan */
+.slogan-block { display: flex; flex-direction: column; gap: 18px; }
+.slogan-lead { color: var(--purple); }
+.tagline {
+  margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  font-size: 24px; line-height: 1.35; font-weight: 600; font-style: italic; color: #3b3545;
+}
+.suits { display: inline-flex; gap: 8px; font-style: normal; font-size: 22px; line-height: 1; color: var(--ink);
+  font-family: "DejaVu Sans", "Segoe UI Symbol", "Arial Unicode MS", system-ui, sans-serif; font-variant-emoji: text; }
+.suits .red { color: #c8102e; }
+@media (max-width: 640px) {
+  .tagline { font-size: 19px; }
+  .suits { font-size: 18px; }
+}

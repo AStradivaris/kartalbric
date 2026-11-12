@@ -16,6 +16,7 @@ import {
 } from "@/lib/site";
 import SectionLinks from "./SectionLinks";
 import Ticker from "./Ticker";
+import FitBridgePromo from "./FitBridgePromo";
 import Anma, { isAnmaDay } from "./Anma";
 
 // Yönetim panelinden yapılan değişiklikler en geç 1 dakika içinde sitede görünür.
@@ -74,6 +75,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, "\\u003c") }}
       />
       <SectionLinks />
+      <FitBridgePromo />
       <header className="nav">
         <a href="/" className="brand" aria-label="Kartal Briç ana sayfa (yenile)">
           <img src="/logo.jpg" alt="Kartal Briç Spor Kulübü logosu" />

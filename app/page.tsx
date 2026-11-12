@@ -16,7 +16,6 @@ import {
 } from "@/lib/site";
 import SectionLinks from "./SectionLinks";
 import Ticker from "./Ticker";
-import FitBridgePromo from "./FitBridgePromo";
 import Anma, { isAnmaDay } from "./Anma";
 
 // Yönetim panelinden yapılan değişiklikler en geç 1 dakika içinde sitede görünür.
@@ -75,7 +74,6 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, "\\u003c") }}
       />
       <SectionLinks />
-      <FitBridgePromo />
       <header className="nav">
         <a href="/" className="brand" aria-label="Kartal Briç ana sayfa (yenile)">
           <img src="/logo.jpg" alt="Kartal Briç Spor Kulübü logosu" />
@@ -91,6 +89,10 @@ export default async function Home() {
           <a href="#galeri">Galeri</a>
           <a href="#iletisim" className="btn solid">İletişim</a>
         </nav>
+        <a href="/fitbridge" className="fb-nav" target="_blank" rel="noopener" aria-label="FitBridge: ortağınla ihale pratiği (yeni sekmede açılır)">
+          <img src="/fitbridge-logo.png" alt="" width={265} height={128} />
+          <span>FitBridge</span>
+        </a>
       </header>
 
       {isAnmaDay() && <Anma />}

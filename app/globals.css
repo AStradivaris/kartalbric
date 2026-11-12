@@ -29,6 +29,7 @@ a:hover { color: var(--purple); }
 .nav {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
   gap: 16px; padding: 16px 48px; border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 40; background: #fff;
 }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 17px; }
 .brand img { width: 48px; height: 48px; object-fit: contain; }
@@ -212,35 +213,37 @@ td.num { font-weight: 700; }
   .suits { font-size: 18px; }
 }
 
-/* FitBridge tanıtım kartı (sağ alt) */
-.fb-promo {
-  position: fixed; right: 20px; bottom: 20px; z-index: 50; width: 320px; max-width: calc(100vw - 32px);
-  background: #fff; border: 1px solid #dfe5ee; border-radius: 20px;
-  box-shadow: 0 18px 48px rgba(30, 58, 95, 0.22);
-  transform: translateY(calc(100% + 40px)); opacity: 0; pointer-events: none;
-  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+
+/* Sabit menü: bölüm başlıkları menünün altında kalmasın */
+section[id] { scroll-margin-top: 140px; }
+
+/* FitBridge menü düğmesi (en sağda) */
+.nav .nav-links { margin-left: auto; }
+.nav .fb-nav { order: 3; }
+.nav .ticker { order: 4; }
+.fb-nav {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 10px;
+  border: 1.5px solid #c9d4e3; border-radius: 999px; background: #fff;
+  font-size: 15px; font-weight: 800; color: #1e3a5f; white-space: nowrap;
 }
-.fb-promo.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-.fb-link { display: flex; align-items: center; gap: 14px; padding: 16px 18px; color: #1e3a5f; }
-.fb-link:hover { color: #1e3a5f; }
-.fb-logo { width: 84px; height: auto; flex-shrink: 0; }
-.fb-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding-right: 18px; }
-.fb-name { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: #1e3a5f; }
-.fb-slogan { font-size: 14px; line-height: 1.4; color: #3d4a5c; }
-.fb-cta { margin-top: 6px; font-size: 14px; font-weight: 800; color: #c8102e; }
-.fb-link:hover .fb-cta { text-decoration: underline; }
-.fb-close {
-  position: absolute; top: 6px; right: 6px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
-  border: 0; border-radius: 50%; background: transparent; color: #6b7686; cursor: pointer;
-}
-.fb-close:hover { background: #f1f4f8; color: #1e3a5f; }
-.fb-close:focus-visible, .fb-link:focus-visible { outline: 3px solid #1e3a5f; outline-offset: 2px; border-radius: 14px; }
+.fb-nav img { width: 44px; height: auto; display: block; }
+.fb-nav:hover { color: #1e3a5f; border-color: #1e3a5f; background: #f5f7fa; }
+.fb-nav:focus-visible { outline: 3px solid #1e3a5f; outline-offset: 2px; }
+
 @media (max-width: 640px) {
-  .fb-promo { right: 12px; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); width: auto; max-width: none; border-radius: 16px; }
-  .fb-link { padding: 12px 14px; gap: 12px; }
-  .fb-logo { width: 64px; }
-  .fb-name { font-size: 16px; }
-  .fb-slogan { font-size: 13px; }
-  .fb-cta { margin-top: 2px; font-size: 13px; }
+  .nav { gap: 10px 12px; padding-top: 10px; padding-bottom: 0; }
+  .brand img { width: 40px; height: 40px; }
+  .nav .brand { order: 1; }
+  .nav .fb-nav { order: 2; margin-left: auto; min-height: 40px; padding: 0 12px 0 8px; font-size: 14px; }
+  .nav .fb-nav img { width: 36px; }
+  .nav .ticker { order: 3; }
+  /* Menü bağlantıları tek satır; sığmazsa yana kayar */
+  .nav .nav-links {
+    order: 4; margin: 0 -20px; padding: 6px 20px 8px; flex: 0 0 calc(100% + 40px);
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 20px;
+  }
+  .nav .nav-links::-webkit-scrollbar { display: none; }
+  .nav .nav-links a { flex-shrink: 0; }
+  .nav .nav-links .btn { min-height: 38px; padding: 0 16px; }
+  section[id] { scroll-margin-top: 160px; }
 }
-@media (prefers-reduced-motion: reduce) { .fb-promo { transition: opacity 0.2s ease; transform: none; } }

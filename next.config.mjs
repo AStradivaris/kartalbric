@@ -1,5 +1,5 @@
 // FitBridge web adresi: kartalbric.com/fitbridge buraya yönlenir (Can onaylayınca kesinleşecek).
-const FITBRIDGE_URL = "https://fitbridge.vercel.app";
+const FITBRIDGE_URL = "https://fitbridge-sandy.vercel.app";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

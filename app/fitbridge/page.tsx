@@ -133,13 +133,20 @@ export default function FitBridgePage() {
         <p className="fbp-sub">Hesap açmaktan sistemini deklerede kullanmaya kadar her adım.</p>
         <div className="fbp-video">
           {FITBRIDGE_YOUTUBE_ID ? (
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${FITBRIDGE_YOUTUBE_ID}?rel=0`}
-              title="FitBridge nasıl kullanılır"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-            />
+            // Bağlantı: telefonda YouTube uygulamasında, bilgisayarda YouTube'da açılır.
+            <a
+              className="fbp-video-link"
+              href={`https://youtu.be/${FITBRIDGE_YOUTUBE_ID}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="FitBridge nasıl kullanılır videosunu YouTube'da izle"
+            >
+              <img src="/fitbridge/video-kapak.jpg" alt="" width={1280} height={720} loading="lazy" />
+              <span className="fbp-video-play" aria-hidden="true">
+                <svg width="34" height="34" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="#fff" /></svg>
+              </span>
+              <span className="fbp-video-label">YouTube&apos;da izle · 2:13</span>
+            </a>
           ) : (
             <a className="fbp-video-soon" href={FITBRIDGE_YOUTUBE_CHANNEL} target="_blank" rel="noopener noreferrer">
               <span className="fbp-play" aria-hidden="true">

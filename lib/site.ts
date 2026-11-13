@@ -19,4 +19,4 @@ export const FITBRIDGE_PLAY_URL = "https://play.google.com/store/apps/details?id
 export const FITBRIDGE_WEB_URL = "https://fitbridge.kartalbric.com";
 export const FITBRIDGE_YOUTUBE_CHANNEL = "https://www.youtube.com/@fitbridgetr";
 // YouTube'a yüklenen tanıtım videosunun kimliği (youtube.com/watch?v=BURASI). Boşsa "yakında" kartı görünür.
-export const FITBRIDGE_YOUTUBE_ID = "";
+export const FITBRIDGE_YOUTUBE_ID = "ZJ5Q9RiM5tA";

@@ -89,9 +89,13 @@ export default async function Home() {
           <a href="#galeri">Galeri</a>
           <a href="#iletisim" className="btn solid">İletişim</a>
         </nav>
-        <a href="/fitbridge" className="fb-nav" target="_blank" rel="noopener" aria-label="FitBridge: ortağınla deklere pratiği (yeni sekmede açılır)">
+        <a href="/fitbridge/ac" className="fb-nav" target="_blank" rel="noopener" aria-label="FitBridge uygulamasını aç (yeni sekmede açılır)">
           <img src="/fitbridge-logo.png" alt="" width={265} height={128} />
           <span>FitBridge</span>
+        </a>
+        <a href="/fitbridge" className="fb-tanitim">
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16l13-8z" fill="currentColor" /></svg>
+          Tanıtım
         </a>
       </header>
 

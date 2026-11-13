@@ -7,6 +7,7 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
+    { url: `${SITE_URL}/fitbridge`, changeFrequency: "monthly", priority: 0.7 },
   ];
 
   // Kayıt sayfaları (açık olanlar) da aranabilsin.

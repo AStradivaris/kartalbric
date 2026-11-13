@@ -13,3 +13,10 @@ export const DEFAULT_RANKING_SEASON_URL =
 export const DEFAULT_TICKER_TEXT =
   "ÖNEMLİ: 6 Aralık 15. Atatürk'ü Anma Briç Turnuvası'na lütfen kayıt olunuz";
 export const DEFAULT_TICKER_URL = "/kayit/ca55e988-755f-4be1-b456-f22a657c958f";
+
+// FitBridge tanıtım sayfası (/fitbridge)
+export const FITBRIDGE_PLAY_URL = "https://play.google.com/store/apps/details?id=com.fitbridge.app";
+export const FITBRIDGE_WEB_URL = "https://fitbridge.kartalbric.com";
+export const FITBRIDGE_YOUTUBE_CHANNEL = "https://www.youtube.com/@fitbridgetr";
+// YouTube'a yüklenen tanıtım videosunun kimliği (youtube.com/watch?v=BURASI). Boşsa "yakında" kartı görünür.
+export const FITBRIDGE_YOUTUBE_ID = "";

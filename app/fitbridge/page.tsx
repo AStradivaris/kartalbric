@@ -133,20 +133,13 @@ export default function FitBridgePage() {
         <p className="fbp-sub">Hesap açmaktan sistemini deklerede kullanmaya kadar her adım.</p>
         <div className="fbp-video">
           {FITBRIDGE_YOUTUBE_ID ? (
-            // Bağlantı: telefonda YouTube uygulamasında, bilgisayarda YouTube'da açılır.
-            <a
-              className="fbp-video-link"
-              href={`https://youtu.be/${FITBRIDGE_YOUTUBE_ID}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="FitBridge nasıl kullanılır videosunu YouTube'da izle"
-            >
-              <img src="/fitbridge/video-kapak.jpg" alt="" width={1280} height={720} loading="lazy" />
-              <span className="fbp-video-play" aria-hidden="true">
-                <svg width="34" height="34" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="#fff" /></svg>
-              </span>
-              <span className="fbp-video-label">YouTube&apos;da izle · 2:13</span>
-            </a>
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${FITBRIDGE_YOUTUBE_ID}?rel=0&playsinline=1`}
+              title="FitBridge nasıl kullanılır"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="lazy"
+            />
           ) : (
             <a className="fbp-video-soon" href={FITBRIDGE_YOUTUBE_CHANNEL} target="_blank" rel="noopener noreferrer">
               <span className="fbp-play" aria-hidden="true">
@@ -157,6 +150,18 @@ export default function FitBridgePage() {
             </a>
           )}
         </div>
+        {FITBRIDGE_YOUTUBE_ID && (
+          <div className="fbp-yt-row">
+            {/* Telefonda YouTube uygulamasında, bilgisayarda YouTube'da açılır */}
+            <a className="fbp-yt" href={`https://youtu.be/${FITBRIDGE_YOUTUBE_ID}`} target="_blank" rel="noopener noreferrer">
+              <svg width="30" height="21" viewBox="0 0 30 21" aria-hidden="true">
+                <rect width="30" height="21" rx="6" fill="#ff0033" />
+                <path d="M12 6v9l8-4.5z" fill="#fff" />
+              </svg>
+              YouTube&apos;da izle
+            </a>
+          </div>
+        )}
       </section>
 
       {/* Asenkron */}

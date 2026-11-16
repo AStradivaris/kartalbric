@@ -173,6 +173,98 @@
   .fbp-final h2 { font-size: 30px; }
 }
 
+/* Giriş: YENİ rozeti */
+.fbp-new {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; padding: 6px 14px 6px 6px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font-size: 15px; font-weight: 700;
+}
+.fbp .fbp-new:hover { color: #fff; background: rgba(255, 255, 255, 0.18); }
+.fbp-new-tag { background: #ffd66b; color: var(--fb-deep); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 9px; border-radius: 999px; }
+.fbp-new-short { display: none; }
+.fbp-note a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.fbp .fbp-note a:hover { color: #ffd66b; }
+
+/* Yenilikler */
+.fbp-news-wrap { text-align: center; max-width: 1180px; margin: 0 auto; }
+.fbp-news-wrap h2 { margin-top: 12px; }
+.fbp-news { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; margin-top: 40px; text-align: left; }
+.fbp-news-card {
+  display: flex; flex-direction: column; gap: 10px; padding: 28px 26px; border-radius: 22px; background: #fff;
+  border: 1px solid var(--fb-line); box-shadow: 0 14px 34px rgba(15, 34, 56, 0.07);
+}
+.fbp-news-icon { display: inline-flex; width: 52px; height: 52px; border-radius: 16px; align-items: center; justify-content: center; font-size: 26px; background: var(--fb-tint); }
+.fbp-news-card h3 { margin: 6px 0 0; font-size: 22px; font-weight: 800; color: var(--fb-ink); }
+.fbp-news-card p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--fb-muted); flex: 1; }
+.fbp-news-link { margin-top: 6px; font-weight: 800; font-size: 15px; color: var(--fb-red); }
+.fbp .fbp-news-link:hover { color: var(--fb-navy); }
+
+/* Sistem aktarma */
+.fbp-import { background: var(--fb-tint); }
+.fbp-import-card {
+  max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 48px; padding: 48px;
+  border-radius: 28px; background: #fff; border: 1px solid var(--fb-line); box-shadow: 0 24px 60px rgba(15, 34, 56, 0.1);
+}
+.fbp-import-text { flex: 1 1 420px; }
+.fbp-import-text h2 { margin-top: 12px; font-size: 38px; }
+.fbp-import-text p { margin: 18px 0 0; font-size: 18px; line-height: 1.6; color: var(--fb-muted); }
+.fbp-import-text b { color: var(--fb-ink); }
+.fbp-checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fbp-checks li { position: relative; padding-left: 34px; font-size: 17px; line-height: 1.5; color: var(--fb-ink); }
+.fbp-checks li::before {
+  content: "✓"; position: absolute; left: 0; top: 1px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: #e5f4ea; color: #1f8a4c; font-weight: 800; font-size: 14px;
+}
+.fbp-import-text .fbp-cta { margin-top: 28px; }
+.fbp-import-mail { margin: 10px 0 0 !important; font-size: 14px !important; color: var(--fb-muted); }
+.fbp-import-soon { margin-top: 22px !important; padding: 14px 16px; border-radius: 14px; background: #fff8e6; border: 1px solid #f5dc9c; font-size: 16px !important; }
+.fbp-import-tree { flex: 0 1 360px; display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 0 auto; }
+.fbp-tree-doc { display: flex; gap: 8px; }
+.fbp-tree-doc span { padding: 8px 14px; border-radius: 10px; background: var(--fb-tint); border: 1px dashed #b8c6d8; font-weight: 800; font-size: 14px; color: var(--fb-navy); }
+.fbp-tree-arrow { font-size: 30px; font-weight: 800; color: var(--fb-red); transform: rotate(90deg); line-height: 1; }
+.fbp-tree { list-style: none; margin: 0; padding: 18px; width: 100%; border-radius: 20px; background: var(--fb-deep); display: flex; flex-direction: column; gap: 8px; box-shadow: 0 20px 44px rgba(15, 34, 56, 0.3); }
+.fbp-tree li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.07); color: #dbe5f2; font-size: 15px; }
+.fbp-tree li.in { margin-left: 26px; }
+.fbp-tree b { min-width: 46px; text-align: center; padding: 4px 8px; border-radius: 8px; color: #fff; font-size: 14px; }
+.fbp-tree b.c { background: #3f7d3a; } .fbp-tree b.d { background: #d9822b; } .fbp-tree b.h { background: #d24b4b; } .fbp-tree b.n { background: #2b5687; }
+
+/* iPhone bildirimleri */
+.fbp-iphone { max-width: 1180px; margin: 0 auto; text-align: center; }
+.fbp-iphone-head h2 { margin-top: 12px; }
+.fbp-iphone-head .fbp-sub { max-width: 640px; margin-left: auto; margin-right: auto; }
+.fbp-isteps { list-style: none; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; counter-reset: i; text-align: left; }
+.fbp-isteps li {
+  counter-increment: i; position: relative; display: flex; flex-direction: column; gap: 6px; padding: 24px 18px 22px; border-radius: 20px;
+  background: #fff; border: 1px solid var(--fb-line);
+}
+.fbp-isteps li::before {
+  content: counter(i); display: inline-flex; width: 36px; height: 36px; border-radius: 50%; align-items: center; justify-content: center;
+  background: var(--fb-red); color: #fff; font-weight: 800; font-size: 16px; margin-bottom: 6px;
+}
+.fbp-isteps b { font-size: 17px; }
+.fbp-isteps span { font-size: 15px; line-height: 1.5; color: var(--fb-muted); }
+.fbp-iphone-note { max-width: 760px; margin: 26px auto 0; font-size: 16px; line-height: 1.55; color: var(--fb-muted); }
+.fbp-iphone-note b { color: var(--fb-ink); }
+.fbp-cta.center { justify-content: center; }
+.fbp-btn.navy { background: var(--fb-navy); color: #fff; }
+.fbp .fbp-btn.navy:hover { color: #fff; transform: translateY(-2px); }
+
+@media (max-width: 1000px) {
+  .fbp-isteps { grid-template-columns: 1fr; max-width: 520px; margin-left: auto; margin-right: auto; }
+  .fbp-isteps li { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 12px; padding: 16px 18px; }
+  .fbp-isteps li::before { margin-bottom: 0; }
+  .fbp-isteps span { flex-basis: 100%; padding-left: 48px; margin-top: -4px; }
+}
+@media (max-width: 720px) {
+  .fbp-new { font-size: 14px; margin-top: 16px; }
+  .fbp-new-long { display: none; }
+  .fbp-new-short { display: inline; }
+  .fbp-news { margin-top: 28px; }
+  .fbp-import-card { padding: 28px 22px; gap: 32px; }
+  .fbp-import-text { text-align: left; }
+  .fbp-import-text h2 { font-size: 28px; }
+  .fbp-import-text .fbp-cta { justify-content: flex-start; }
+}
+
 /* Videonun sağ altında YouTube bağlantısı */
 .fbp-yt-row { max-width: 960px; margin: 14px auto 0; display: flex; justify-content: flex-end; }
 .fbp-yt {

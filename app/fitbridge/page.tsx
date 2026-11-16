@@ -31,7 +31,7 @@ const FEATURES = [
     img: "sistem",
     kicker: "Sistemini yaz",
     title: "Deklere sisteminizi adım adım kurun",
-    text: "Açılışları ve cevapları ağaç şeklinde yaz: 1NT, Stayman, transferler, davetler… Hazır olunca tek dokunuşla PDF çıktısını al.",
+    text: "Açılışları ve cevapları ağaç şeklinde yaz: 1NT, Stayman, transferler, davetler… Hazır olunca tek dokunuşla PDF çıktısını al. Sayfalarca sisteminiz varsa elle yazmanıza gerek yok, biz aktaralım.",
   },
   {
     img: "paylasim",
@@ -51,6 +51,41 @@ const FEATURES = [
     title: "Dört el ve tüm deklareler bir arada",
     text: "Deklarasyon bitince dört eli, puanları ve kimin ne dediğini birlikte görün. Favorilere ekleyip sonra tekrar çalışın.",
   },
+];
+
+const SYSTEM_MAIL =
+  "mailto:fitbridge@kartalbric.com?subject=" + encodeURIComponent("FitBridge'e sistem aktarma");
+
+const NEWS = [
+  {
+    icon: "⚡",
+    title: "Daha hızlı",
+    text: "Arayüz, deklarasyon ekranı ve sistem yazma modülü yenilendi. Uygulama artık çok daha akıcı.",
+    href: "",
+    link: "",
+  },
+  {
+    icon: "📚",
+    title: "Sisteminizi biz aktaralım",
+    text: "Sayfalarca sisteminiz mi var? PDF, Word ya da fotoğraf olarak gönderin, uygulamaya biz ekleyelim.",
+    href: "#sistem-aktar",
+    link: "Nasıl?",
+  },
+  {
+    icon: "🔔",
+    title: "iPhone'da bildirimler",
+    text: "Web sürümünü ana ekrana ekleyin, ortağınız seri başlattığında bildirim telefonunuza gelsin.",
+    href: "#iphone",
+    link: "Adımlar",
+  },
+];
+
+const IPHONE_STEPS = [
+  { b: "Safari'den aç", s: "fitbridge.kartalbric.com adresine Safari ile girin." },
+  { b: "Paylaş'a dokun", s: "Alttaki yukarı oklu kare simgesi. Göremezseniz önce ••• menüsüne dokunun." },
+  { b: "Ana Ekrana Ekle", s: "Listeden “Ana Ekrana Ekle”yi seçip Ekle'ye dokunun." },
+  { b: "Simgeden giriş yap", s: "Ana ekranda beliren FitBridge simgesiyle uygulamayı açıp giriş yapın." },
+  { b: "Bildirimlere izin ver", s: "İzin sorulunca “İzin Ver”e dokunun. Hepsi bu kadar." },
 ];
 
 function PlayIcon() {
@@ -108,6 +143,14 @@ export default function FitBridgePage() {
         <span className="fbp-suit s4" aria-hidden="true">♣</span>
         <div className="fbp-hero-text">
           <img className="fbp-tile" src="/fitbridge/tile.png" alt="FitBridge logosu" width={120} height={120} />
+          <a className="fbp-new" href="#yenilikler">
+            <span className="fbp-new-tag">YENİ</span>
+            <span className="fbp-new-long">Daha hızlı uygulama, iPhone&apos;da bildirimler</span>
+            <span className="fbp-new-short">Kasım güncellemesi geldi</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
           <h1>FitBridge</h1>
           <p className="fbp-lead">
             Ortağınla deklere pratiği yap,
@@ -115,7 +158,10 @@ export default function FitBridgePage() {
             deklere sisteminizi birlikte yaz.
           </p>
           <Cta />
-          <p className="fbp-note">iPhone ve bilgisayarda web sürümünü kullanabilirsin.</p>
+          <p className="fbp-note">
+            iPhone ve bilgisayarda web sürümünü kullanabilirsin. iPhone&apos;da{" "}
+            <a href="#iphone">ana ekrana ekleyince bildirimler de gelir</a>.
+          </p>
         </div>
         <div className="fbp-hero-phones" aria-hidden="true">
           <div className="fbp-phone back">
@@ -162,6 +208,28 @@ export default function FitBridgePage() {
             </a>
           </div>
         )}
+      </section>
+
+      {/* Yenilikler */}
+      <section className="fbp-section fbp-news-wrap" id="yenilikler">
+        <span className="fbp-kicker">Kasım güncellemesi</span>
+        <h2>Yenilikler</h2>
+        <div className="fbp-news">
+          {NEWS.map((n) => (
+            <article key={n.title} className="fbp-news-card">
+              <span className="fbp-news-icon" aria-hidden="true">
+                {n.icon}
+              </span>
+              <h3>{n.title}</h3>
+              <p>{n.text}</p>
+              {n.href && (
+                <a className="fbp-news-link" href={n.href}>
+                  {n.link} →
+                </a>
+              )}
+            </article>
+          ))}
+        </div>
       </section>
 
       {/* Asenkron */}
@@ -213,6 +281,82 @@ export default function FitBridgePage() {
             </div>
           </article>
         ))}
+      </section>
+
+      {/* Sistem aktarma */}
+      <section className="fbp-section fbp-import" id="sistem-aktar">
+        <div className="fbp-import-card">
+          <div className="fbp-import-text">
+            <span className="fbp-kicker">Sistem aktarma</span>
+            <h2>Sayfalarca sisteminiz mi var? Elle yazmanıza gerek yok.</h2>
+            <p>
+              Sisteminizi <b>PDF, Word ya da fotoğraf</b> olarak gönderin, FitBridge&apos;e biz aktaralım. Sonrasında:
+            </p>
+            <ul className="fbp-checks">
+              <li>Deklarasyonda siz ve ortağınız deklerelere dokunarak anlamlarını görürsünüz.</li>
+              <li>Sistemi uygulama içinde istediğiniz zaman düzenlersiniz.</li>
+              <li>Başka arkadaşlarınızla paylaşır, tam erişim ya da sadece görüntüleme yetkisi verirsiniz.</li>
+            </ul>
+            <div className="fbp-cta">
+              <a className="fbp-btn primary" href={SYSTEM_MAIL}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="M3 7l9 6 9-6" />
+                </svg>
+                Sistemini gönder
+              </a>
+            </div>
+            <p className="fbp-import-mail">fitbridge@kartalbric.com</p>
+            <p className="fbp-import-soon">
+              Sisteminizi paylaşmak istemiyor musunuz? <b>İçe aktarma modülü</b> üzerinde çalışıyoruz; yakında kendiniz
+              aktarabileceksiniz.
+            </p>
+          </div>
+          <div className="fbp-import-tree" aria-hidden="true">
+            <div className="fbp-tree-doc">
+              <span>PDF</span>
+              <span>Word</span>
+              <span>📷</span>
+            </div>
+            <div className="fbp-tree-arrow">→</div>
+            <ul className="fbp-tree">
+              <li><b className="c">1♣</b> 16+ any</li>
+              <li className="in"><b className="d">1♦</b> 0-7 any</li>
+              <li className="in"><b className="h">1♥</b> 8-11 balanced</li>
+              <li><b className="n">1NT</b> 14-16 balanced</li>
+              <li className="in"><b className="c">2♣</b> Stayman</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* iPhone bildirimleri */}
+      <section className="fbp-section fbp-iphone" id="iphone">
+        <div className="fbp-iphone-head">
+          <span className="fbp-kicker">iPhone kullanıcıları</span>
+          <h2>Bildirimleri bir kez açın, sıra size gelince haber alın</h2>
+          <p className="fbp-sub">
+            Web sürümünü ana ekrana ekleyince FitBridge uygulama gibi açılır ve bildirim gönderebilir.
+          </p>
+        </div>
+        <ol className="fbp-isteps">
+          {IPHONE_STEPS.map((st) => (
+            <li key={st.b}>
+              <b>{st.b}</b>
+              <span>{st.s}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="fbp-iphone-note">
+          <b>Önemli:</b> Uygulamaya hep ana ekrandaki simgeden girin; bildirimler Safari sekmesinden değil oradan çalışır.
+          iOS 16.4 veya daha yeni bir sürüm gerekir.
+        </p>
+        <div className="fbp-cta center">
+          <a className="fbp-btn navy" href={FITBRIDGE_WEB_URL} target="_blank" rel="noopener noreferrer">
+            <GlobeIcon />
+            fitbridge.kartalbric.com
+          </a>
+        </div>
       </section>
 
       {/* Başlangıç */}

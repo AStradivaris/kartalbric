@@ -1,0 +1,184 @@
+/* Sonuç takvimi ve turnuva sayfaları */
+.res-wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; min-height: 60vh; }
+.res-nav .nav-links { margin-left: auto; }
+.res-head { margin-bottom: 24px; display: flex; flex-direction: column; gap: 6px; }
+.res-head .eyebrow { margin: 0; }
+.res-head .eyebrow a { color: var(--purple); }
+.res-head h1 { margin: 0; font-size: 34px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 800; }
+.muted { color: var(--muted); margin: 0; }
+.small { font-size: 13px; margin-top: 10px; }
+.red { color: #c0262d; }
+.inline-link { color: var(--purple); font-weight: 700; }
+
+/* Takvim */
+.cal-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.cal-bar h2 { margin: 0; font-size: 24px; font-weight: 800; text-align: center; }
+.cal-step {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px;
+  border: 1.5px solid #cdbfd9; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ink);
+}
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.cal-dow {
+  padding: 10px 8px; background: var(--purple-dark); color: #fff; font-size: 13px; font-weight: 700; text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.12);
+}
+.cal-dow .short { display: none; }
+.cal-cell {
+  min-height: 104px; padding: 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 6px; background: #fff; min-width: 0;
+}
+.cal-cell.empty { background: #fbfafc; }
+.cal-cell.has { background: var(--tint); }
+.cal-day { font-size: 13px; font-weight: 700; color: var(--muted); }
+.cal-cell.today .cal-day {
+  display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+  border-radius: 999px; background: var(--purple); color: #fff;
+}
+.cal-event {
+  display: block; padding: 6px 8px; border-radius: 8px; background: var(--purple); color: #fff;
+  font-size: 12.5px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere;
+}
+.cal-event:hover { color: #fff; opacity: 0.9; }
+
+.res-month-list { margin-top: 32px; }
+.res-month-list h3 { margin: 0 0 12px; font-size: 18px; font-weight: 800; }
+.res-month-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.res-month-list li a {
+  display: flex; align-items: center; gap: 16px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px;
+}
+.res-month-list .date { font-size: 13px; font-weight: 700; color: var(--purple); min-width: 120px; }
+.res-month-list strong { flex: 1; font-size: 16px; }
+.res-month-list .arrow { font-size: 22px; color: var(--purple); }
+
+/* Turnuva sayfası */
+.view-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.view-tabs a {
+  min-height: 40px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px;
+  border: 1.5px solid #cdbfd9; font-weight: 700; font-size: 14px;
+}
+.view-tabs a.on { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+.rank-block { margin-top: 28px; }
+.rank-block h2 { margin: 0 0 12px; font-size: 22px; font-weight: 800; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 14px; }
+.res-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 14.5px; }
+.traveller { min-width: 520px; }
+.res-table th {
+  text-align: left; padding: 10px 12px; background: var(--tint); font-size: 12px; font-weight: 800;
+  color: #5b5466; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+}
+.res-table td { padding: 10px 12px; border-top: 1px solid var(--line); white-space: nowrap; }
+.res-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.res-table .strong { font-weight: 800; }
+.res-table a { color: var(--purple); font-weight: 700; }
+.res-table tbody tr:hover { background: #fcfbfd; }
+.ranking .rank { font-weight: 800; width: 48px; }
+.ranking .names { white-space: normal; }
+.ranking .names a { color: var(--ink); display: flex; flex-wrap: wrap; column-gap: 6px; }
+.ranking .names a span:not(:last-child)::after { content: " -"; }
+.ranking .names a:hover { color: var(--purple); }
+.podium.p1 .rank { color: #b8860b; }
+.podium.p2 .rank { color: #7d7d8a; }
+.podium.p3 .rank { color: #a0522d; }
+.contract { font-weight: 800; }
+.contract .dbl { margin-left: 2px; color: #c0262d; font-size: 0.9em; }
+.opp { white-space: normal !important; min-width: 180px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 20px; }
+.chip {
+  min-width: 42px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px; border: 1.5px solid #d9d0e2; font-weight: 700; font-size: 14px; background: #fff;
+}
+.chip.on { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+.board-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.board-bar h2 { margin: 0; font-size: 24px; font-weight: 800; }
+.board-info { text-align: center; color: var(--muted); margin: 6px 0 16px; font-size: 14px; }
+
+.diagram {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-areas: "n n n" "w c e" "s s s";
+  gap: 12px 16px; align-items: center; justify-items: center; max-width: 560px; margin: 0 auto 24px;
+}
+.hand-N { grid-area: n; }
+.hand-S { grid-area: s; }
+.hand-W { grid-area: w; justify-self: end; }
+.hand-E { grid-area: e; justify-self: start; }
+.hand { width: max-content; max-width: 100%; font-size: 16px; }
+.hand-head { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: #5b5466; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.hand-head .hcp { color: var(--purple); }
+.dealer-tag { padding: 1px 6px; border-radius: 6px; background: #fdf0d5; color: #7a4b00; font-size: 10px; text-transform: none; letter-spacing: 0; }
+.suit-row { display: flex; gap: 8px; line-height: 1.55; font-weight: 600; }
+.suit-row > span:first-child { width: 16px; text-align: center; font-size: 17px; font-family: "Segoe UI Symbol", "DejaVu Sans", system-ui, sans-serif; }
+.hand-cards { white-space: nowrap; }
+.hand-cards { letter-spacing: 0.02em; }
+
+.compass {
+  grid-area: c; position: relative; width: 92px; height: 92px; border-radius: 12px; background: var(--purple-dark);
+  color: #fff; font-weight: 800; font-size: 12px; border: 5px solid #3b2a46;
+}
+.compass.vns { border-top-color: #c0262d; border-bottom-color: #c0262d; }
+.compass.vew { border-left-color: #c0262d; border-right-color: #c0262d; }
+.compass span { position: absolute; }
+.compass .c-n { top: 4px; left: 50%; transform: translateX(-50%); }
+.compass .c-s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.compass .c-w { left: 6px; top: 50%; transform: translateY(-50%); }
+.compass .c-e { right: 6px; top: 50%; transform: translateY(-50%); }
+.compass .c-no { inset: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; }
+
+.pair-card { display: flex; align-items: center; gap: 18px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--tint); margin-bottom: 20px; }
+.pair-card h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
+.pair-rank { font-size: 34px; font-weight: 800; color: var(--purple); display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.pair-rank span { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+@media (max-width: 720px) {
+  .res-wrap { padding: 20px 12px 64px; }
+  .res-head h1 { font-size: 26px; }
+  .cal-dow .long { display: none; }
+  .cal-dow .short { display: inline; }
+  .cal-dow { padding: 8px 2px; font-size: 12px; }
+  .cal-cell { min-height: 56px; padding: 4px; gap: 3px; }
+  .cal-event { font-size: 0; padding: 0; height: 8px; border-radius: 4px; }
+  .cal-step span { display: none; }
+  .cal-bar h2 { font-size: 20px; }
+  .res-month-list .date { min-width: 0; }
+  .res-month-list li a { flex-wrap: wrap; gap: 4px 12px; }
+  .res-month-list strong { flex-basis: 100%; order: 3; }
+  .res-month-list .arrow { display: none; }
+  .res-table { font-size: 13.5px; }
+  .ranking .names a { flex-direction: column; }
+  .ranking .names a span:not(:last-child)::after { content: ""; }
+  .ranking td:nth-child(2), .ranking th:nth-child(2) { display: none; }
+  .ranking { table-layout: fixed; }
+  .ranking th:nth-child(1) { width: 44px; }
+  .ranking th:nth-child(4) { width: 62px; }
+  .ranking th:nth-child(5) { width: 58px; }
+  .ranking .names a span { overflow-wrap: anywhere; }
+  /* Çift sayfası: Tur ve Oyn. sütunları gizlenir, kalanlar ekrana sığar */
+  .pair-table { table-layout: fixed; font-size: 12.5px; }
+  .pair-table th, .pair-table td { padding: 8px 4px; }
+  .pair-table th:first-child, .pair-table td:first-child { padding-left: 10px; }
+  .pair-table td:nth-child(1), .pair-table th:nth-child(1),
+  .pair-table td:nth-child(5), .pair-table th:nth-child(5) { display: none; }
+  .pair-table th { font-size: 10px; letter-spacing: 0; }
+  .pair-table th:nth-child(2) { width: 42px; }
+  .pair-table th:nth-child(4) { width: 46px; }
+  .pair-table th:nth-child(6) { width: 30px; }
+  .pair-table th:nth-child(7) { width: 44px; }
+  .pair-table th:nth-child(8) { width: 40px; }
+  .pair-table th:nth-child(9) { width: 34px; }
+  .pair-table td:nth-child(2) { padding-left: 10px; }
+  .opp { min-width: 0; overflow-wrap: anywhere; }
+  .res-table th, .res-table td { padding: 8px 8px; }
+  .diagram { gap: 10px 8px; }
+  .hand { font-size: 14px; }
+  .hand-head { font-size: 11px; }
+  .suit-row { gap: 4px; }
+  .compass { width: 64px; height: 64px; border-width: 4px; font-size: 11px; }
+  .compass .c-no { font-size: 20px; }
+}
+
+/* Sonuç sayfalarının üst menüsü mobilde tek satır */
+@media (max-width: 640px) {
+  .res-nav { padding: 10px 16px; flex-wrap: nowrap; }
+  .res-nav .nav-links { order: 2; margin: 0 0 0 auto; padding: 0; flex: 0 1 auto; gap: 14px; font-size: 14px; overflow: visible; }
+}

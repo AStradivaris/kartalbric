@@ -165,3 +165,48 @@ export function formatDate(iso: string): string {
     year: "numeric",
   });
 }
+
+// ---- Turnuva sonuç sayfaları (/sonuclar) ----
+
+export type TournamentListItem = { id: string; title: string; played_on: string };
+
+export async function getTournamentsBetween(from: string, to: string): Promise<TournamentListItem[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data } = await sb
+    .from("tournaments")
+    .select("id,title,played_on")
+    .not("data", "is", null)
+    .gte("played_on", from)
+    .lte("played_on", to)
+    .order("played_on", { ascending: true })
+    .order("created_at", { ascending: true });
+  return (data as TournamentListItem[]) ?? [];
+}
+
+export async function getLatestTournamentDate(): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data } = await sb
+    .from("tournaments")
+    .select("played_on")
+    .not("data", "is", null)
+    .order("played_on", { ascending: false })
+    .limit(1);
+  return (data as { played_on: string }[] | null)?.[0]?.played_on ?? null;
+}
+
+export async function getTournamentDetail(
+  id: string
+): Promise<(TournamentListItem & { data: import("./bridge-results").TournamentData }) | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data } = await sb
+    .from("tournaments")
+    .select("id,title,played_on,data")
+    .eq("id", id)
+    .not("data", "is", null)
+    .maybeSingle();
+  return (data as (TournamentListItem & { data: import("./bridge-results").TournamentData }) | null) ?? null;
+}

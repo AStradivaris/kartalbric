@@ -28,9 +28,6 @@ export default async function Home() {
     getSettings(),
   ]);
 
-  const resultsUrl =
-    settings.results_url && /^https?:\/\//.test(settings.results_url) ? settings.results_url : null;
-
   // Ayar hiç kaydedilmemişse federasyon adresleri kullanılır; boş kaydedilmişse düğme gizlenir.
   const linkOrNull = (v: string | undefined, fallback: string) => {
     const u = v === undefined ? fallback : v;
@@ -82,9 +79,7 @@ export default async function Home() {
         {tickerText && <Ticker text={tickerText} href={tickerUrl} />}
         <nav className="nav-links">
           <a href="#duyurular">Duyurular</a>
-          {resultsUrl && (
-            <a href={resultsUrl} target="_blank" rel="noopener noreferrer">Sonuçlar</a>
-          )}
+          <a href="/sonuclar">Sonuçlar</a>
           {(rankingCurrent || rankingSeason) && <a href="#siralama">Sıralama</a>}
           <a href="#galeri">Galeri</a>
           <a href="#iletisim" className="btn solid">İletişim</a>
@@ -126,11 +121,9 @@ export default async function Home() {
           </p>
           <div className="hero-actions">
             <a href="#duyurular" className="btn solid">Duyurular</a>
-            {resultsUrl && (
-              <a href={resultsUrl} className="btn line" target="_blank" rel="noopener noreferrer">
-                Son sonuçlar
-              </a>
-            )}
+            <a href="/sonuclar" className="btn line">
+              Son sonuçlar
+            </a>
           </div>
         </div>
       </section>

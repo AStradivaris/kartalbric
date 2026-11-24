@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { formatDate, type Announcement, type Photo } from "@/lib/data";
+import { buildTournament, type TournamentData } from "@/lib/bridge-results";
 import {
   DEFAULT_RANKING_CURRENT_URL,
   DEFAULT_RANKING_SEASON_URL,
@@ -632,13 +633,14 @@ function LinkSetting({ settingKey, title, label, hint, savedText, clearedText, d
 function ResultsAndRankings() {
   return (
     <>
+      <TournamentUpload />
       <LinkSetting
         settingKey="results_url"
-        title="Sonuç sayfası bağlantısı"
+        title="Dış sonuç sayfası (isteğe bağlı)"
         label="Başka sitedeki sonuç adresi"
-        hint={"Üst menüdeki \"Sonuçlar\" ve ana sayfadaki \"Son sonuçlar\" düğmeleri bu adrese gider (yeni sekmede açılır). Boş bırakırsanız ikisi de görünmez."}
-        savedText={"Kaydedildi. Sitedeki \"Sonuçlar\" ve \"Son sonuçlar\" bu adrese gider."}
-        clearedText="Bağlantı kaldırıldı, sonuç düğmeleri sitede gizlenir."
+        hint={"Sitedeki \"Sonuçlar\" düğmeleri artık kulübün kendi sonuç sayfasına (/sonuclar) gider. Buraya bir adres girerseniz o sayfanın altında \"Diğer sonuçlar\" bağlantısı olarak görünür."}
+        savedText="Kaydedildi."
+        clearedText="Bağlantı kaldırıldı."
       />
       <LinkSetting
         settingKey="ranking_current_url"
@@ -658,6 +660,188 @@ function ResultsAndRankings() {
         clearedText="Bağlantı kaldırıldı, düğme sitede gizlenir."
         defaultUrl={DEFAULT_RANKING_SEASON_URL}
       />
+    </>
+  );
+}
+
+type AdminTournament = { id: string; title: string; played_on: string };
+
+// Skor programının .txt çıktısı + .dup dosyasından turnuva sonuç sayfası oluşturur.
+function TournamentUpload() {
+  const [items, setItems] = useState<AdminTournament[]>([]);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [data, setData] = useState<TournamentData | null>(null);
+  const [txtName, setTxtName] = useState("");
+  const [dupName, setDupName] = useState("");
+  const [txt, setTxt] = useState<string | null>(null);
+  const [dup, setDup] = useState<Uint8Array | null>(null);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const { data } = await getBrowserSupabase()
+      .from("tournaments")
+      .select("id,title,played_on")
+      .not("data", "is", null)
+      .order("played_on", { ascending: false })
+      .limit(50);
+    setItems((data as AdminTournament[]) ?? []);
+  }, []);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Her dosya seçiminde iki dosyayı yeniden okuyup önizleme üretir.
+  useEffect(() => {
+    if (!txt) {
+      setData(null);
+      return;
+    }
+    try {
+      setData(buildTournament(txt, dup));
+      setMsg("");
+      setErr(false);
+    } catch (e) {
+      setData(null);
+      setErr(true);
+      setMsg(e instanceof Error ? e.message : String(e));
+    }
+  }, [txt, dup]);
+
+  function guessFromName(name: string) {
+    const m = /(20\d\d)[-_.]?(\d\d)[-_.]?(\d\d)/.exec(name);
+    if (m && !date) setDate(`${m[1]}-${m[2]}-${m[3]}`);
+  }
+
+  async function pickTxt(f: File | undefined) {
+    if (!f) return;
+    setTxtName(f.name);
+    guessFromName(f.name);
+    const buf = new Uint8Array(await f.arrayBuffer());
+    // Dosya UTF-8 değilse Türkçe Windows kodlamasıyla oku.
+    let text: string;
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
+    } catch {
+      text = new TextDecoder("windows-1254").decode(buf);
+    }
+    setTxt(text);
+  }
+
+  async function pickDup(f: File | undefined) {
+    if (!f) return;
+    setDupName(f.name);
+    guessFromName(f.name);
+    setDup(new Uint8Array(await f.arrayBuffer()));
+  }
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!data || !date || !title.trim()) return;
+    setBusy(true);
+    const { error } = await getBrowserSupabase()
+      .from("tournaments")
+      .insert({ title: title.trim(), played_on: date, data });
+    setBusy(false);
+    if (error) {
+      setErr(true);
+      setMsg(error.message);
+      return;
+    }
+    setErr(false);
+    setMsg("Yayınlandı. Sonuç sayfası en geç 1 dakika içinde sitede görünür.");
+    setTitle("");
+    setTxt(null);
+    setDup(null);
+    setTxtName("");
+    setDupName("");
+    load();
+  }
+
+  async function remove(t: AdminTournament) {
+    if (!confirm(`"${t.title}" sonuçları silinsin mi?`)) return;
+    await getBrowserSupabase().from("tournaments").delete().eq("id", t.id);
+    load();
+  }
+
+  const ns = data?.pairs.find((p) => p.dir === "NS" && p.rank === 1);
+  const ew = data?.pairs.find((p) => p.dir === "EW" && p.rank === 1);
+  const withHands = data?.boards.filter((b) => b.hands).length ?? 0;
+
+  return (
+    <>
+      <form className="panel" onSubmit={save}>
+        <h2>Turnuva sonucu yükle</h2>
+        <p className="hint" style={{ margin: "0 0 16px" }}>
+          Skor programının sonuç dosyasını (.txt) ve dağıtım dosyasını (.dup) seçin. Sonuçlar
+          kartalbric.com/sonuclar takviminde, seçtiğiniz tarihte görünür.
+        </p>
+        <div className="field">
+          <label htmlFor="t-txt">Sonuç dosyası (.txt)</label>
+          <input id="t-txt" type="file" accept=".txt,text/plain" onChange={(e) => pickTxt(e.target.files?.[0])} />
+          {txtName && <span className="hint" style={{ margin: 0 }}>{txtName}</span>}
+        </div>
+        <div className="field">
+          <label htmlFor="t-dup">El dosyası (.dup, isteğe bağlı)</label>
+          <input id="t-dup" type="file" accept=".dup" onChange={(e) => pickDup(e.target.files?.[0])} />
+          {dupName && <span className="hint" style={{ margin: 0 }}>{dupName}</span>}
+        </div>
+        <div className="field">
+          <label htmlFor="t-title">Turnuva adı</label>
+          <input
+            id="t-title"
+            placeholder="ör. Pazar Simultane"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="t-date">Oynandığı tarih</label>
+          <input id="t-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        </div>
+
+        {data && (
+          <div className="panel" style={{ background: "var(--tint)", marginBottom: 16 }}>
+            <strong>Önizleme</strong>
+            <p className="hint" style={{ margin: "6px 0 0" }}>
+              {data.pairs.length} çift · {data.boards.length} board ·{" "}
+              {withHands > 0 ? `${withHands} board'un eli var` : "eller yok (.dup seçilmedi)"}
+              <br />
+              {ns && `K-G 1.: ${ns.names.join(" - ")} (%${ns.pct.toFixed(2)})`}
+              <br />
+              {ew && `D-B 1.: ${ew.names.join(" - ")} (%${ew.pct.toFixed(2)})`}
+            </p>
+          </div>
+        )}
+
+        <button className="btn-admin" disabled={busy || !data || !date || !title.trim()}>
+          {busy ? "Yayınlanıyor..." : "Yayınla"}
+        </button>
+        {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
+      </form>
+
+      {items.length > 0 && (
+        <div className="panel">
+          <h2>Yayındaki sonuçlar</h2>
+          <ul className="list">
+            {items.map((t) => (
+              <li key={t.id}>
+                <div className="meta" style={{ flex: 1 }}>
+                  <strong>{t.title}</strong>
+                  <span>{formatDate(t.played_on)}</span>
+                </div>
+                <a className="btn-edit" style={{ display: "inline-flex", alignItems: "center" }} href={`/sonuclar/${t.id}`} target="_blank" rel="noopener noreferrer">
+                  Gör
+                </a>
+                <button className="btn-del" onClick={() => remove(t)}>Sil</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </>
   );
 }

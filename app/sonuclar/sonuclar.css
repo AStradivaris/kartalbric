@@ -254,3 +254,9 @@
 .m-pct { white-space: normal !important; }
 .m-pct .pct { display: block; margin-left: auto; width: max-content; padding: 1px 4px; font-size: 11px; }
 .m-pct .pct + .pct { margin-top: 3px; }
+
+/* Sonuç renkleri */
+.res { font-weight: 800; }
+.res-down { color: #c0262d; }
+.res-up { color: #1e7a3c; }
+.res-eq { color: #2563c9; }

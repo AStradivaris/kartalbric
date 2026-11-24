@@ -74,6 +74,14 @@ const shortName = (n: string) => {
   return w.length < 2 ? n : [...w.slice(0, -1).map((x) => `${x[0]}.`), w[w.length - 1]].join(" ");
 };
 
+// Sonuç: batık (-) kırmızı, fazla löve (+) yeşil, tam (=) mavi
+function Res({ r }: { r: BoardResult }) {
+  const t = resultText(r);
+  if (!t) return null;
+  const cls = t.startsWith("-") ? "res-down" : t.startsWith("+") ? "res-up" : t === "=" ? "res-eq" : "";
+  return <span className={`res ${cls}`}>{t}</span>;
+}
+
 // Yüzde rozeti: 0-24 kırmızı, 25-49 açık turuncu, 50-69 sarı, 70+ yeşil
 function Pct({ v, total }: { v: number; total?: boolean }) {
   const cls = v >= 70 ? "good" : v >= 50 ? "mid" : v >= 25 ? "low" : "bad";
@@ -197,7 +205,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       ))}
                       <td><Contract r={r} /></td>
                       <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
-                      <td>{resultText(r)}</td>
+                      <td><Res r={r} /></td>
                       <td className="num">{score(r.scoreNS, "NS")}</td>
                       <td className="num">{score(r.scoreNS, "EW")}</td>
                       <td className="num"><Pct v={r.pctNS} /></td>
@@ -232,7 +240,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                         </td>
                       ))}
                       <td className="m-contract">
-                        <Contract r={r} /> {r.declarer ? SEAT_TR[r.declarer] : ""} <span className="m-res">{resultText(r)}</span>
+                        <Contract r={r} /> {r.declarer ? SEAT_TR[r.declarer] : ""} <Res r={r} />
                       </td>
                       <td className="num">{r.scoreNS === null ? "" : r.scoreNS > 0 ? `+${r.scoreNS}` : r.scoreNS}</td>
                       <td className="num m-pct">
@@ -321,7 +329,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       </a>
                     </td>
                     <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
-                    <td>{resultText(r)}</td>
+                    <td><Res r={r} /></td>
                     <td className="num">{sc}</td>
                     <td className="num"><Pct v={ns ? r.pctNS : r.pctEW} /></td>
                   </tr>

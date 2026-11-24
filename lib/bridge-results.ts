@@ -209,6 +209,24 @@ export function buildTournament(scoreText: string, dupBytes: Uint8Array | null):
   return { version: 1, pairs, boards };
 }
 
+// ---- Bridge Solver ----
+
+/**
+ * Bridge Solver Online (dds.bridgewebs.com) bağlantısı: eller ve oyuncu
+ * isimleriyle açılır, kart kart çift kukla oynanabilir.
+ */
+export function bridgeSolverUrl(board: Board, names?: Partial<Record<Seat, string>>): string | null {
+  if (!board.hands) return null;
+  const lin = (h: Hand) => "SHDC".split("").map((s, i) => s + h[i]).join("");
+  const dealerNo = { S: 1, W: 2, N: 3, E: 4 }[board.dealer];
+  const md = `${dealerNo}${lin(board.hands.S)},${lin(board.hands.W)},${lin(board.hands.N)},${lin(board.hands.E)}`;
+  const sv = { "-": "o", NS: "n", EW: "e", Hep: "b" }[board.vul];
+  const clean = (n?: string) => (n ?? "").replace(/[|,]/g, " ").trim();
+  const pn = names ? `pn|${clean(names.S)},${clean(names.W)},${clean(names.N)},${clean(names.E)}|` : "";
+  const text = `${pn}md|${md}|rh||ah|Board ${board.no}|sv|${sv}|pg||`;
+  return `https://dds.bridgewebs.com/bsol2/ddummy.htm?lin=${encodeURIComponent(text)}`;
+}
+
 // ---- Gösterim yardımcıları ----
 
 export const SUIT_SYMBOL: Record<string, string> = { S: "♠", H: "♥", D: "♦", C: "♣", N: "SA" };

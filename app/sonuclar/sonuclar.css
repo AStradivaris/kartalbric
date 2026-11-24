@@ -1,5 +1,5 @@
 /* Sonuç takvimi ve turnuva sayfaları */
-.res-wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; min-height: 60vh; }
+.res-wrap { max-width: 1200px; margin: 0 auto; padding: 32px 20px 80px; min-height: 60vh; }
 .res-nav .nav-links { margin-left: auto; }
 .res-head { margin-bottom: 24px; display: flex; flex-direction: column; gap: 6px; }
 .res-head .eyebrow { margin: 0; }
@@ -62,7 +62,34 @@
 .rank-block h2 { margin: 0 0 12px; font-size: 22px; font-weight: 800; }
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 14px; }
 .res-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 14.5px; }
-.traveller { min-width: 520px; }
+.traveller { font-size: 13.5px; }
+.traveller th, .traveller td { padding: 8px 6px; }
+.traveller th { font-size: 11px; letter-spacing: 0.02em; vertical-align: bottom; }
+.traveller th.grp { text-align: center; padding-bottom: 2px; border-bottom: 1px solid var(--line); }
+.traveller thead tr:last-child th { padding-top: 2px; }
+.res-table tr.mine td { background: #f1e6f8; font-weight: 700; }
+.res-table a.plain { color: inherit; }
+.board-link { display: inline-block; min-width: 28px; }
+
+/* Board ekranı: solda tüm masalar, sağda Bridge Solver */
+.board-layout { display: grid; grid-template-columns: 520px minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 8px; }
+.board-left h3 { margin: 0 0 10px; font-size: 16px; font-weight: 800; }
+.solver-frame { width: 100%; height: 680px; border: 1px solid var(--line); border-radius: 14px; background: #fff; display: block; }
+.solver-link { display: inline-block; margin-top: 10px; font-size: 14px; font-weight: 700; color: var(--purple); }
+.mobile-only { display: none; }
+.hand-name { font-size: 13px; font-weight: 800; color: var(--purple); margin: -2px 0 4px; max-width: 150px; line-height: 1.25; }
+@media (max-width: 980px) {
+  .board-layout { grid-template-columns: minmax(0, 1fr); }
+  .board-right { order: -1; }
+  .mobile-only { display: block; }
+  .desktop-only { display: none; }
+  .solver-link {
+    display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 18px; margin: 0 0 8px;
+    border-radius: 999px; background: var(--purple); color: #fff; text-align: center;
+  }
+  .solver-link:hover { color: #fff; }
+  .traveller { min-width: 470px; }
+}
 .res-table th {
   text-align: left; padding: 10px 12px; background: var(--tint); font-size: 12px; font-weight: 800;
   color: #5b5466; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
@@ -151,7 +178,6 @@
   .ranking { table-layout: fixed; }
   .ranking th:nth-child(1) { width: 44px; }
   .ranking th:nth-child(4) { width: 62px; }
-  .ranking th:nth-child(5) { width: 58px; }
   .ranking .names a span { overflow-wrap: anywhere; }
   /* Çift sayfası: Tur ve Oyn. sütunları gizlenir, kalanlar ekrana sığar */
   .pair-table { table-layout: fixed; font-size: 12.5px; }
@@ -160,12 +186,11 @@
   .pair-table td:nth-child(1), .pair-table th:nth-child(1),
   .pair-table td:nth-child(5), .pair-table th:nth-child(5) { display: none; }
   .pair-table th { font-size: 10px; letter-spacing: 0; }
-  .pair-table th:nth-child(2) { width: 42px; }
-  .pair-table th:nth-child(4) { width: 46px; }
-  .pair-table th:nth-child(6) { width: 30px; }
-  .pair-table th:nth-child(7) { width: 44px; }
-  .pair-table th:nth-child(8) { width: 40px; }
-  .pair-table th:nth-child(9) { width: 34px; }
+  .pair-table th:nth-child(2) { width: 46px; }
+  .pair-table th:nth-child(4) { width: 50px; }
+  .pair-table th:nth-child(6) { width: 44px; }
+  .pair-table th:nth-child(7) { width: 50px; }
+  .pair-table th:nth-child(8) { width: 38px; }
   .pair-table td:nth-child(2) { padding-left: 10px; }
   .opp { min-width: 0; overflow-wrap: anywhere; }
   .res-table th, .res-table td { padding: 8px 8px; }

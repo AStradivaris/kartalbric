@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { formatDate, getTournamentDetail } from "@/lib/data";
 import {
+  bridgeSolverUrl,
   fmtNum,
   hcp,
   splitContract,
@@ -35,10 +36,10 @@ const SEAT_TR: Record<Seat, string> = { N: "K", E: "D", S: "G", W: "B" };
 const SEAT_LONG: Record<Seat, string> = { N: "Kuzey", E: "Doğu", S: "Güney", W: "Batı" };
 const VUL_TR: Record<Board["vul"], string> = { "-": "Hiçbiri", NS: "K-G", EW: "D-B", Hep: "Herkes" };
 const SUITS = [
-  { sym: "\u2660\uFE0E", red: false },
-  { sym: "\u2665\uFE0E", red: true },
-  { sym: "\u2666\uFE0E", red: true },
-  { sym: "\u2663\uFE0E", red: false },
+  { sym: "♠︎", red: false },
+  { sym: "♥︎", red: true },
+  { sym: "♦︎", red: true },
+  { sym: "♣︎", red: false },
 ];
 const STRAIN: Record<string, { sym: string; red: boolean }> = {
   S: SUITS[0],
@@ -63,7 +64,14 @@ function Contract({ r }: { r: BoardResult }) {
   );
 }
 
-function HandView({ seat, hand, dealer }: { seat: Seat; hand: Hand; dealer: boolean }) {
+// Sonuç sütunu: "=", "+1", "-2" (pas ve ayarlı skorda boş)
+const resultText = (r: BoardResult) =>
+  r.contract === "Pass" || r.adjusted ? "" : tricksText(r.contract, r.tricks) || String(r.tricks ?? "");
+
+const cardText = (cards: string) =>
+  cards ? cards.split("").map((c) => (c === "T" ? "10" : c)).join(" ") : "—";
+
+function HandView({ seat, hand, dealer, name }: { seat: Seat; hand: Hand; dealer: boolean; name?: string }) {
   return (
     <div className={`hand hand-${seat}`}>
       <div className="hand-head">
@@ -71,24 +79,25 @@ function HandView({ seat, hand, dealer }: { seat: Seat; hand: Hand; dealer: bool
         {dealer && <span className="dealer-tag">Dağıtıcı</span>}
         <span className="hcp">{hcp(hand)} P</span>
       </div>
+      {name && <div className="hand-name">{name}</div>}
       {hand.map((cards, i) => (
         <div key={i} className="suit-row">
           <span className={SUITS[i].red ? "red" : undefined}>{SUITS[i].sym}</span>
-          <span className="hand-cards">{cards ? cards.replace(/T/g, "10").split("").join(" ").replace(/1 0/g, "10") : "—"}</span>
+          <span className="hand-cards">{cardText(cards)}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function Diagram({ board }: { board: Board }) {
+function Diagram({ board, names }: { board: Board; names?: Partial<Record<Seat, string>> }) {
   if (!board.hands) return null;
   const vulNS = board.vul === "NS" || board.vul === "Hep";
   const vulEW = board.vul === "EW" || board.vul === "Hep";
   return (
     <div className="diagram">
       {(["N", "W", "E", "S"] as Seat[]).map((s) => (
-        <HandView key={s} seat={s} hand={board.hands![s]} dealer={board.dealer === s} />
+        <HandView key={s} seat={s} hand={board.hands![s]} dealer={board.dealer === s} name={names?.[s]} />
       ))}
       <div className={`compass${vulNS ? " vns" : ""}${vulEW ? " vew" : ""}`} aria-label="Pusula">
         <span className="c-n">K</span>
@@ -101,6 +110,7 @@ function Diagram({ board }: { board: Board }) {
   );
 }
 
+// K-G'nin puanı artıysa K-G sütununda, eksiyse D-B sütununda gösterilir.
 function score(n: number | null, side: "NS" | "EW") {
   if (n === null) return "";
   if (side === "NS") return n > 0 ? String(n) : n === 0 ? "0" : "";
@@ -117,16 +127,16 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   const pairById = new Map(pairs.map((p) => [p.id, p]));
   const pairName = (pid: number) => pairById.get(pid)?.names.join(" - ") ?? `Çift ${pid}`;
   const base = `/sonuclar/${t.id}`;
-  const top = boards[0]?.results.length ? boards[0].results[0].mpNS + boards[0].results[0].mpEW : 0;
 
   const boardNo = Number(sp.board);
   const board = boards.find((b) => b.no === boardNo);
   const pair = pairById.get(Number(sp.cift));
+  const withPair = (no: number) => `${base}?board=${no}${pair ? `&cift=${pair.id}` : ""}`;
 
   const boardChips = (
     <nav className="chips" aria-label="Boardlar">
       {boards.map((b) => (
-        <a key={b.no} href={`${base}?board=${b.no}`} className={`chip${b.no === board?.no ? " on" : ""}`}>
+        <a key={b.no} href={withPair(b.no)} className={`chip${b.no === board?.no ? " on" : ""}`}>
           {b.no}
         </a>
       ))}
@@ -140,74 +150,121 @@ export default async function TournamentPage({ params, searchParams }: Props) {
       </p>
       <h1>{t.title}</h1>
       <p className="muted">
-        {pairs.length} çift · {boards.length} board · Top {fmtNum(top, 0)}
+        {pairs.length} çift · {boards.length} board
       </p>
       <div className="view-tabs">
         <a href={base} className={!board && !pair ? "on" : undefined}>Sıralama</a>
-        <a href={`${base}?board=${board?.no ?? boards[0]?.no ?? 1}`} className={board ? "on" : undefined}>
+        <a href={withPair(board?.no ?? boards[0]?.no ?? 1)} className={board ? "on" : undefined}>
           Boardlar
         </a>
-        {pair && <a className="on">Çift {pair.id}</a>}
+        {pair && (
+          <a href={`${base}?cift=${pair.id}`} className={!board ? "on" : undefined}>
+            Çift {pair.id}
+          </a>
+        )}
       </div>
     </div>
   );
 
-  // ---- Board görünümü ----
+  // ---- Board görünümü: solda tüm masalar, sağda Bridge Solver ----
   if (board) {
     const i = boards.indexOf(board);
     const prev = boards[i - 1];
     const next = boards[i + 1];
+    // Seçili çiftin oynadığı masa: isimler ellere yazılır, satır vurgulanır.
+    const mine = pair ? board.results.find((r) => r.ns === pair.id || r.ew === pair.id) : undefined;
+    let names: Partial<Record<Seat, string>> | undefined;
+    if (mine) {
+      const ns = pairById.get(mine.ns)?.names ?? [];
+      const ew = pairById.get(mine.ew)?.names ?? [];
+      // Skor programındaki sıra: K-G çiftinde 1. isim Kuzey, D-B çiftinde 1. isim Doğu.
+      names = { N: ns[0], S: ns[1], E: ew[0], W: ew[1] };
+    }
+    const solver = bridgeSolverUrl(board, names);
+
     return (
       <>
         {head}
         {boardChips}
         <div className="board-bar">
-          {prev ? <a href={`${base}?board=${prev.no}`} className="cal-step">‹ {prev.no}</a> : <span />}
+          {prev ? <a href={withPair(prev.no)} className="cal-step">‹ {prev.no}</a> : <span />}
           <h2>Board {board.no}</h2>
-          {next ? <a href={`${base}?board=${next.no}`} className="cal-step">{next.no} ›</a> : <span />}
+          {next ? <a href={withPair(next.no)} className="cal-step">{next.no} ›</a> : <span />}
         </div>
         <p className="board-info">
           Dağıtıcı: <strong>{SEAT_LONG[board.dealer]}</strong> · Zon: <strong>{VUL_TR[board.vul]}</strong>
+          {mine && <> · Masa {mine.table}, Tur {mine.round}</>}
         </p>
-        <Diagram board={board} />
 
-        <div className="table-wrap">
-          <table className="res-table traveller">
-            <thead>
-              <tr>
-                <th>K-G</th>
-                <th>D-B</th>
-                <th>Kontrat</th>
-                <th>Oyn.</th>
-                <th>Löve</th>
-                <th className="num">K-G</th>
-                <th className="num">D-B</th>
-                <th className="num">MP K-G</th>
-                <th className="num">MP D-B</th>
-              </tr>
-            </thead>
-            <tbody>
-              {board.results.map((r, k) => (
-                <tr key={k}>
-                  <td>
-                    <a href={`${base}?cift=${r.ns}`} title={pairName(r.ns)}>{r.ns}</a>
-                  </td>
-                  <td>
-                    <a href={`${base}?cift=${r.ew}`} title={pairName(r.ew)}>{r.ew}</a>
-                  </td>
-                  <td><Contract r={r} /></td>
-                  <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
-                  <td>{r.contract === "Pass" ? "" : tricksText(r.contract, r.tricks) || (r.tricks ?? "")}</td>
-                  <td className="num">{score(r.scoreNS, "NS")}</td>
-                  <td className="num">{score(r.scoreNS, "EW")}</td>
-                  <td className="num strong">{fmtNum(r.mpNS)}</td>
-                  <td className="num strong">{fmtNum(r.mpEW)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="board-layout">
+          <div className="board-left">
+            <h3>Tüm masalar</h3>
+            <div className="table-wrap">
+              <table className="res-table traveller">
+                <thead>
+                  <tr>
+                    <th colSpan={2} className="grp">Çift</th>
+                    <th rowSpan={2}>Kont.</th>
+                    <th rowSpan={2}>Oyn.</th>
+                    <th rowSpan={2}>Sonuç</th>
+                    <th colSpan={2} className="grp">Skor</th>
+                    <th colSpan={2} className="grp">%</th>
+                  </tr>
+                  <tr>
+                    <th>K-G</th>
+                    <th>D-B</th>
+                    <th className="num">K-G</th>
+                    <th className="num">D-B</th>
+                    <th className="num">K-G</th>
+                    <th className="num">D-B</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {board.results.map((r, k) => (
+                    <tr key={k} className={r === mine ? "mine" : undefined}>
+                      <td>
+                        <a href={`${base}?board=${board.no}&cift=${r.ns}`} title={pairName(r.ns)}>{r.ns}</a>
+                      </td>
+                      <td>
+                        <a href={`${base}?board=${board.no}&cift=${r.ew}`} title={pairName(r.ew)}>{r.ew}</a>
+                      </td>
+                      <td><Contract r={r} /></td>
+                      <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
+                      <td>{resultText(r)}</td>
+                      <td className="num">{score(r.scoreNS, "NS")}</td>
+                      <td className="num">{score(r.scoreNS, "EW")}</td>
+                      <td className="num strong">{r.pctNS}</td>
+                      <td className="num strong">{r.pctEW}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="muted small">Çift numarasına dokununca o masanın oyuncuları ellerde görünür.</p>
+          </div>
+
+          <div className="board-right">
+            {solver ? (
+              <>
+                {/* Telefonda Bridge Solver dar ekrana sığmadığı için önce kendi diyagramımız */}
+                <div className="mobile-only">
+                  <Diagram board={board} names={names} />
+                </div>
+                <iframe
+                  className="solver-frame desktop-only"
+                  src={solver}
+                  title={`Board ${board.no} çift kukla analizi`}
+                  loading="lazy"
+                />
+                <a className="solver-link" href={solver} target="_blank" rel="noopener noreferrer">
+                  Bridge Solver&apos;da aç: çift kukla analizi, kart kart oyna ›
+                </a>
+              </>
+            ) : (
+              <p className="muted">Bu board&apos;un elleri yüklenmemiş.</p>
+            )}
+          </div>
         </div>
-        <p className="muted small">Çift numarasına dokunarak o çiftin tüm boardlarını görebilirsiniz.</p>
       </>
     );
   }
@@ -231,7 +288,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           <div>
             <h2>{pair.names.join(" - ")}</h2>
             <p className="muted">
-              Çift {pair.id} · {fmtNum(pair.mp)} MP · %{fmtNum(pair.pct, 2)}
+              Çift {pair.id} · %{fmtNum(pair.pct, 2)}
             </p>
           </div>
         </div>
@@ -244,9 +301,8 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 <th>Rakip</th>
                 <th>Kont.</th>
                 <th>Oyn.</th>
-                <th>Löve</th>
+                <th>Sonuç</th>
                 <th className="num">Skor</th>
-                <th className="num">MP</th>
                 <th className="num">%</th>
               </tr>
             </thead>
@@ -254,27 +310,32 @@ export default async function TournamentPage({ params, searchParams }: Props) {
               {rows.map(({ b, r, ns }) => {
                 const opp = ns ? r.ew : r.ns;
                 const sc = r.scoreNS === null ? "" : String(ns ? r.scoreNS : -r.scoreNS);
+                const href = `${base}?board=${b.no}&cift=${pair.id}`;
                 return (
                   <tr key={b.no}>
                     <td>{r.round}</td>
                     <td>
-                      <a href={`${base}?board=${b.no}`}>{b.no}</a>
+                      <a href={href} className="board-link">{b.no}</a>
                     </td>
                     <td className="opp">
                       <a href={`${base}?cift=${opp}`}>{pairName(opp)}</a>
                     </td>
-                    <td><Contract r={r} /></td>
+                    <td>
+                      <a href={href} className="plain">
+                        <Contract r={r} />
+                      </a>
+                    </td>
                     <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
-                    <td>{r.contract === "Pass" ? "" : tricksText(r.contract, r.tricks)}</td>
+                    <td>{resultText(r)}</td>
                     <td className="num">{sc}</td>
-                    <td className="num strong">{fmtNum(ns ? r.mpNS : r.mpEW)}</td>
-                    <td className="num">{ns ? r.pctNS : r.pctEW}</td>
+                    <td className="num strong">{ns ? r.pctNS : r.pctEW}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+        <p className="muted small">Board numarasına dokununca eller ve çift kukla analizi açılır.</p>
       </>
     );
   }
@@ -294,7 +355,6 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                   <th>Sıra</th>
                   <th>No</th>
                   <th>Oyuncular</th>
-                  <th className="num">MP</th>
                   <th className="num">%</th>
                 </tr>
               </thead>
@@ -310,7 +370,6 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                         ))}
                       </a>
                     </td>
-                    <td className="num">{fmtNum(p.mp)}</td>
                     <td className="num strong">{fmtNum(p.pct, 2)}</td>
                   </tr>
                 ))}

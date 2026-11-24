@@ -82,9 +82,13 @@ function Res({ r }: { r: BoardResult }) {
   return <span className={`res ${cls}`}>{t}</span>;
 }
 
-// Yüzde rozeti: 0-24 kırmızı, 25-49 açık turuncu, 50-69 sarı, 70+ yeşil
+// Yüzde rozeti
+//  board yüzdesi: 0-24 kırmızı, 25-49 açık turuncu, 50-69 sarı, 70+ yeşil
+//  genel sıralama (total): 55+ yeşil, 45-55 turuncu, 45 altı kırmızı
 function Pct({ v, total }: { v: number; total?: boolean }) {
-  const cls = v >= 70 ? "good" : v >= 50 ? "mid" : v >= 25 ? "low" : "bad";
+  const cls = total
+    ? v >= 55 ? "good" : v >= 45 ? "low" : "bad"
+    : v >= 70 ? "good" : v >= 50 ? "mid" : v >= 25 ? "low" : "bad";
   return <span className={`pct ${cls}`}>{fmtNum(v, total ? 2 : 0)}</span>;
 }
 

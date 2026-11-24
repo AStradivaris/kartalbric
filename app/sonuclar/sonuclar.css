@@ -223,3 +223,14 @@
 @media (max-width: 720px) {
   .pct, .traveller .pct, .pair-table .pct { min-width: 0; padding: 2px 4px; }
 }
+
+/* Board seçici ve çift sekmesi */
+.board-select select {
+  font: inherit; font-size: 20px; font-weight: 800; color: var(--ink); background: #fff;
+  border: 1.5px solid #cdbfd9; border-radius: 12px; padding: 8px 36px 8px 14px; min-height: 48px; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--purple) 50%), linear-gradient(135deg, var(--purple) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%; background-size: 6px 6px; background-repeat: no-repeat;
+}
+.view-tabs a.pair-tab { max-width: 100%; white-space: normal; line-height: 1.25; padding-top: 8px; padding-bottom: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

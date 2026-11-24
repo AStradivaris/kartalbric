@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { formatDate, getTournamentDetail } from "@/lib/data";
 import SolverFrame from "./SolverFrame";
+import BoardSelect from "./BoardSelect";
 import {
   bridgeSolverUrl,
   fmtNum,
@@ -104,16 +105,6 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   const pair = pairById.get(Number(sp.cift));
   const withPair = (no: number) => `${base}?board=${no}${pair ? `&cift=${pair.id}` : ""}`;
 
-  const boardChips = (
-    <nav className="chips" aria-label="Boardlar">
-      {boards.map((b) => (
-        <a key={b.no} href={withPair(b.no)} className={`chip${b.no === board?.no ? " on" : ""}`}>
-          {b.no}
-        </a>
-      ))}
-    </nav>
-  );
-
   const head = (
     <div className="res-head">
       <p className="eyebrow">
@@ -129,8 +120,9 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           Boardlar
         </a>
         {pair && (
-          <a href={`${base}?cift=${pair.id}`} className={!board ? "on" : undefined}>
-            Çift {pair.id}
+          <a href={`${base}?cift=${pair.id}`} className={`pair-tab${!board ? " on" : ""}`}>
+            {board ? "‹ Çift özetine dön: " : ""}
+            {pair.names.join(" - ")}
           </a>
         )}
       </div>
@@ -156,10 +148,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     return (
       <>
         {head}
-        {boardChips}
         <div className="board-bar">
           {prev ? <a href={withPair(prev.no)} className="cal-step">‹ {prev.no}</a> : <span />}
-          <h2>Board {board.no}</h2>
+          <BoardSelect
+            boards={boards.map((b) => b.no)}
+            current={board.no}
+            hrefBase={withPair(0).replace("board=0", "board=__B__")}
+          />
           {next ? <a href={withPair(next.no)} className="cal-step">{next.no} ›</a> : <span />}
         </div>
         <p className="board-info">
@@ -195,7 +190,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                     <tr key={k} className={r === mine ? "mine" : undefined}>
                       {[r.ns, r.ew].map((pid) => (
                         <td key={pid} className="tr-names">
-                          <a href={`${base}?board=${board.no}&cift=${pid}`} title={pairName(pid)}>
+                          <a href={`${base}?cift=${pid}`} title={`${pairName(pid)}: çift özeti`}>
                             {(pairById.get(pid)?.names ?? [`Çift ${pid}`]).map((n, k) => (
                               <span key={k}>{shortName(n)}</span>
                             ))}
@@ -214,7 +209,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 </tbody>
               </table>
             </div>
-            <p className="muted small">Bir çiftin adına dokununca o masanın oyuncuları ellerde görünür.</p>
+            <p className="muted small">Bir çiftin adına dokununca o çiftin özeti açılır.</p>
           </div>
 
           <div className="board-right">
@@ -341,11 +336,6 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           </div>
         </section>
       ))}
-      <section className="rank-block">
-        <h2>Boardlar</h2>
-        <p className="muted small">Board numarasına dokunarak elleri ve tüm masaların sonuçlarını görebilirsiniz.</p>
-        {boardChips}
-      </section>
     </>
   );
 }

@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 // Bridge Solver sayfasının doğal boyutu (piksel). Kutu daha darsa sayfa
 // orantılı küçültülür; böylece kaydırma çubuğu olmadan tek ekranda görünür.
-const NATURAL_W = 800; // sayfanın kendi viewport ayarı: width=800
-const NATURAL_H = 450;
+const NATURAL_W = 816; // sayfa 800 px + kenar boşlukları
+const NATURAL_H = 476; // alttaki düğme satırı dahil
 
 export default function SolverFrame({ src, title }: { src: string; title: string }) {
   const box = useRef<HTMLDivElement>(null);

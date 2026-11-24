@@ -165,7 +165,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         <div className="board-layout">
           <div className="board-left">
             <h3>Tüm masalar</h3>
-            <div className="table-wrap">
+            <div className="table-wrap desktop-only">
               <table className="res-table traveller">
                 <thead>
                   <tr>
@@ -204,6 +204,43 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       <td className="num">{score(r.scoreNS, "EW")}</td>
                       <td className="num"><Pct v={r.pctNS} /></td>
                       <td className="num"><Pct v={r.pctEW} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Telefon: kaydırmadan sığan sade tablo */}
+            <div className="table-wrap mobile-only">
+              <table className="res-table traveller-m">
+                <thead>
+                  <tr>
+                    <th>K-G</th>
+                    <th>D-B</th>
+                    <th>Kontrat</th>
+                    <th className="num">Skor</th>
+                    <th className="num">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {board.results.map((r, k) => (
+                    <tr key={k} className={r === mine ? "mine" : undefined}>
+                      {[r.ns, r.ew].map((pid) => (
+                        <td key={pid} className="tr-names">
+                          <a href={`${base}?cift=${pid}`}>
+                            {(pairById.get(pid)?.names ?? [`Çift ${pid}`]).map((n, j) => (
+                              <span key={j}>{shortName(n)}</span>
+                            ))}
+                          </a>
+                        </td>
+                      ))}
+                      <td className="m-contract">
+                        <Contract r={r} /> {r.declarer ? SEAT_TR[r.declarer] : ""} <span className="m-res">{resultText(r)}</span>
+                      </td>
+                      <td className="num">{r.scoreNS === null ? "" : r.scoreNS > 0 ? `+${r.scoreNS}` : r.scoreNS}</td>
+                      <td className="num m-pct">
+                        <Pct v={r.pctNS} />
+                        <Pct v={r.pctEW} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

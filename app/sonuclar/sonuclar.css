@@ -85,6 +85,8 @@
 @media (max-width: 1180px) {
   .board-layout { grid-template-columns: minmax(0, 1fr); }
   .board-right { order: -1; }
+  .mobile-only { display: block; }
+  .desktop-only { display: none; }
   .board-right { margin: 0 -12px; }
   .board-right .solver-box { border-left: 0; border-right: 0; border-radius: 0; }
   .solver-link { margin: 8px 12px 4px; }
@@ -234,3 +236,20 @@
 }
 .view-tabs a.pair-tab { max-width: 100%; white-space: normal; line-height: 1.25; padding-top: 8px; padding-bottom: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Telefon masalar tablosu */
+.traveller-m { table-layout: fixed; font-size: 12px; }
+.traveller-m th, .traveller-m td { padding: 7px 4px; }
+.traveller-m th:first-child, .traveller-m td:first-child { padding-left: 8px; }
+.traveller-m th:last-child, .traveller-m td:last-child { padding-right: 8px; }
+.traveller-m th { font-size: 10px; letter-spacing: 0; }
+.traveller-m th:nth-child(3) { width: 66px; }
+.traveller-m th:nth-child(4) { width: 44px; }
+.traveller-m th:nth-child(5) { width: 42px; }
+.traveller-m .tr-names a { font-size: 10.5px; }
+.traveller-m .tr-names span { overflow: hidden; text-overflow: ellipsis; }
+.m-contract { white-space: nowrap; }
+.m-res { font-weight: 700; }
+.m-pct { white-space: normal !important; }
+.m-pct .pct { display: block; margin-left: auto; width: max-content; padding: 1px 4px; font-size: 11px; }
+.m-pct .pct + .pct { margin-top: 3px; }

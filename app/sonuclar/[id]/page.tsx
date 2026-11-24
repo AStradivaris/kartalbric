@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { formatDate, getTournamentDetail } from "@/lib/data";
+import SolverFrame from "./SolverFrame";
 import {
   bridgeSolverUrl,
   fmtNum,
@@ -67,6 +68,12 @@ function Contract({ r }: { r: BoardResult }) {
 // Sonuç sütunu: "=", "+1", "-2" (pas ve ayarlı skorda boş)
 const resultText = (r: BoardResult) =>
   r.contract === "Pass" || r.adjusted ? "" : tricksText(r.contract, r.tricks) || String(r.tricks ?? "");
+
+// "Murat GÜNGÖR" -> "M. GÜNGÖR", "Hüseyin Cahit MOĞULTAY" -> "H. C. MOĞULTAY"
+const shortName = (n: string) => {
+  const w = n.split(" ");
+  return w.length < 2 ? n : [...w.slice(0, -1).map((x) => `${x[0]}.`), w[w.length - 1]].join(" ");
+};
 
 const cardText = (cards: string) =>
   cards ? cards.split("").map((c) => (c === "T" ? "10" : c)).join(" ") : "—";
@@ -222,12 +229,15 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 <tbody>
                   {board.results.map((r, k) => (
                     <tr key={k} className={r === mine ? "mine" : undefined}>
-                      <td>
-                        <a href={`${base}?board=${board.no}&cift=${r.ns}`} title={pairName(r.ns)}>{r.ns}</a>
-                      </td>
-                      <td>
-                        <a href={`${base}?board=${board.no}&cift=${r.ew}`} title={pairName(r.ew)}>{r.ew}</a>
-                      </td>
+                      {[r.ns, r.ew].map((pid) => (
+                        <td key={pid} className="tr-names">
+                          <a href={`${base}?board=${board.no}&cift=${pid}`} title={pairName(pid)}>
+                            {(pairById.get(pid)?.names ?? [`Çift ${pid}`]).map((n, k) => (
+                              <span key={k}>{shortName(n)}</span>
+                            ))}
+                          </a>
+                        </td>
+                      ))}
                       <td><Contract r={r} /></td>
                       <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
                       <td>{resultText(r)}</td>
@@ -240,7 +250,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 </tbody>
               </table>
             </div>
-            <p className="muted small">Çift numarasına dokununca o masanın oyuncuları ellerde görünür.</p>
+            <p className="muted small">Bir çiftin adına dokununca o masanın oyuncuları ellerde görünür.</p>
           </div>
 
           <div className="board-right">
@@ -250,14 +260,11 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 <div className="mobile-only">
                   <Diagram board={board} names={names} />
                 </div>
-                <iframe
-                  className="solver-frame desktop-only"
-                  src={solver}
-                  title={`Board ${board.no} çift kukla analizi`}
-                  loading="lazy"
-                />
+                <div className="desktop-only">
+                  <SolverFrame src={solver} title={`Board ${board.no} double dummy analizi`} />
+                </div>
                 <a className="solver-link" href={solver} target="_blank" rel="noopener noreferrer">
-                  Bridge Solver&apos;da aç: çift kukla analizi, kart kart oyna ›
+                  Bridge Solver&apos;da aç: double dummy analizi, kart kart oyna ›
                 </a>
               </>
             ) : (
@@ -335,7 +342,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
             </tbody>
           </table>
         </div>
-        <p className="muted small">Board numarasına dokununca eller ve çift kukla analizi açılır.</p>
+        <p className="muted small">Board numarasına dokununca eller ve double dummy analizi açılır.</p>
       </>
     );
   }

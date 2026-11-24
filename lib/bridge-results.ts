@@ -221,7 +221,15 @@ export function bridgeSolverUrl(board: Board, names?: Partial<Record<Seat, strin
   const dealerNo = { S: 1, W: 2, N: 3, E: 4 }[board.dealer];
   const md = `${dealerNo}${lin(board.hands.S)},${lin(board.hands.W)},${lin(board.hands.N)},${lin(board.hands.E)}`;
   const sv = { "-": "o", NS: "n", EW: "e", Hep: "b" }[board.vul];
-  const clean = (n?: string) => (n ?? "").replace(/[|,]/g, " ").trim();
+  // Bridge Solver Türkçe harfleri bozuk gösterdiği için isimler sadeleştirilir.
+  const TR: Record<string, string> = { ç: "c", Ç: "C", ğ: "g", Ğ: "G", ı: "i", İ: "I", ö: "o", Ö: "O", ş: "s", Ş: "S", ü: "u", Ü: "U", â: "a", Â: "A", î: "i", û: "u" };
+  const clean = (n?: string) =>
+    (n ?? "")
+      .replace(/[çÇğĞıİöÖşŞüÜâÂîû]/g, (c) => TR[c])
+      .normalize("NFD")
+      .replace(/[^\x20-\x7E]/g, "")
+      .replace(/[|,]/g, " ")
+      .trim();
   const pn = names ? `pn|${clean(names.S)},${clean(names.W)},${clean(names.N)},${clean(names.E)}|` : "";
   const text = `${pn}md|${md}|rh||ah|Board ${board.no}|sv|${sv}|pg||`;
   return `https://dds.bridgewebs.com/bsol2/ddummy.htm?lin=${encodeURIComponent(text)}`;

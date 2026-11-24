@@ -1,4 +1,5 @@
 /* Sonuç takvimi ve turnuva sayfaları */
+.res-wrap:has(.board-layout) { max-width: 1480px; }
 .res-wrap { max-width: 1200px; margin: 0 auto; padding: 32px 20px 80px; min-height: 60vh; }
 .res-nav .nav-links { margin-left: auto; }
 .res-head { margin-bottom: 24px; display: flex; flex-direction: column; gap: 6px; }
@@ -63,7 +64,7 @@
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 14px; }
 .res-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 14.5px; }
 .traveller { font-size: 13.5px; }
-.traveller th, .traveller td { padding: 8px 6px; }
+.traveller th, .traveller td { padding: 8px 5px; }
 .traveller th { font-size: 11px; letter-spacing: 0.02em; vertical-align: bottom; }
 .traveller th.grp { text-align: center; padding-bottom: 2px; border-bottom: 1px solid var(--line); }
 .traveller thead tr:last-child th { padding-top: 2px; }
@@ -72,13 +73,16 @@
 .board-link { display: inline-block; min-width: 28px; }
 
 /* Board ekranı: solda tüm masalar, sağda Bridge Solver */
-.board-layout { display: grid; grid-template-columns: 520px minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 8px; }
+.board-layout { display: grid; grid-template-columns: minmax(0, 690px) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 8px; }
 .board-left h3 { margin: 0 0 10px; font-size: 16px; font-weight: 800; }
-.solver-frame { width: 100%; height: 680px; border: 1px solid var(--line); border-radius: 14px; background: #fff; display: block; }
+.solver-box { width: 100%; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.solver-box iframe { border: 0; display: block; background: #fff; }
+.tr-names { white-space: nowrap; }
+.tr-names a { display: flex; flex-direction: column; font-size: 12px; line-height: 1.3; font-weight: 600; }
 .solver-link { display: inline-block; margin-top: 10px; font-size: 14px; font-weight: 700; color: var(--purple); }
 .mobile-only { display: none; }
 .hand-name { font-size: 13px; font-weight: 800; color: var(--purple); margin: -2px 0 4px; max-width: 150px; line-height: 1.25; }
-@media (max-width: 980px) {
+@media (max-width: 1180px) {
   .board-layout { grid-template-columns: minmax(0, 1fr); }
   .board-right { order: -1; }
   .mobile-only { display: block; }
@@ -88,7 +92,7 @@
     border-radius: 999px; background: var(--purple); color: #fff; text-align: center;
   }
   .solver-link:hover { color: #fff; }
-  .traveller { min-width: 470px; }
+  .traveller { min-width: 520px; }
 }
 .res-table th {
   text-align: left; padding: 10px 12px; background: var(--tint); font-size: 12px; font-weight: 800;

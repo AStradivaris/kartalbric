@@ -186,14 +186,14 @@
   .pair-table { table-layout: fixed; font-size: 12.5px; }
   .pair-table th, .pair-table td { padding: 8px 4px; }
   .pair-table th:first-child, .pair-table td:first-child { padding-left: 10px; }
-  .pair-table td:nth-child(1), .pair-table th:nth-child(1),
-  .pair-table td:nth-child(5), .pair-table th:nth-child(5) { display: none; }
+  .pair-table td:nth-child(1), .pair-table th:nth-child(1) { display: none; }
   .pair-table th { font-size: 10px; letter-spacing: 0; }
-  .pair-table th:nth-child(2) { width: 46px; }
-  .pair-table th:nth-child(4) { width: 50px; }
-  .pair-table th:nth-child(6) { width: 44px; }
+  .pair-table th:nth-child(2) { width: 40px; }
+  .pair-table th:nth-child(4) { width: 44px; }
+  .pair-table th:nth-child(5) { width: 30px; }
+  .pair-table th:nth-child(6) { width: 40px; }
   .pair-table th:nth-child(7) { width: 46px; }
-  .pair-table th:nth-child(8) { width: 42px; }
+  .pair-table th:nth-child(8) { width: 40px; }
   .pair-table td:nth-child(2) { padding-left: 10px; }
   .opp { min-width: 0; overflow-wrap: anywhere; }
   .res-table th, .res-table td { padding: 8px 8px; }

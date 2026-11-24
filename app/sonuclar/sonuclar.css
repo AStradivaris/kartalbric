@@ -167,8 +167,12 @@
   .cal-dow .long { display: none; }
   .cal-dow .short { display: inline; }
   .cal-dow { padding: 8px 2px; font-size: 12px; }
-  .cal-cell { min-height: 56px; padding: 4px; gap: 3px; }
-  .cal-event { font-size: 0; padding: 0; height: 8px; border-radius: 4px; }
+  .cal-cell { min-height: 64px; padding: 4px 2px; gap: 3px; }
+  .cal-event {
+    font-size: 9px; font-weight: 600; letter-spacing: -0.2px; line-height: 1.2; padding: 3px 2px; border-radius: 5px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: normal; word-break: normal; text-align: center;
+  }
   .cal-step span { display: none; }
   .cal-bar h2 { font-size: 20px; }
   .res-month-list .date { min-width: 0; }
@@ -210,4 +214,7 @@
 @media (max-width: 640px) {
   .res-nav { padding: 10px 16px; flex-wrap: nowrap; }
   .res-nav .nav-links { order: 2; margin: 0 0 0 auto; padding: 0; flex: 0 1 auto; gap: 14px; font-size: 14px; overflow: visible; }
+}
+@media (max-width: 370px) {
+  .cal-event { font-size: 8.5px; padding: 3px 1px; letter-spacing: -0.3px; }
 }

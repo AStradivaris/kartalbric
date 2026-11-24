@@ -85,13 +85,9 @@
 @media (max-width: 1180px) {
   .board-layout { grid-template-columns: minmax(0, 1fr); }
   .board-right { order: -1; }
-  .mobile-only { display: block; }
-  .desktop-only { display: none; }
-  .solver-link {
-    display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 18px; margin: 0 0 8px;
-    border-radius: 999px; background: var(--purple); color: #fff; text-align: center;
-  }
-  .solver-link:hover { color: #fff; }
+  .board-right { margin: 0 -12px; }
+  .board-right .solver-box { border-left: 0; border-right: 0; border-radius: 0; }
+  .solver-link { margin: 8px 12px 4px; }
   .traveller { min-width: 520px; }
 }
 .res-table th {
@@ -182,10 +178,9 @@
   .res-table { font-size: 13.5px; }
   .ranking .names a { flex-direction: column; }
   .ranking .names a span:not(:last-child)::after { content: ""; }
-  .ranking td:nth-child(2), .ranking th:nth-child(2) { display: none; }
   .ranking { table-layout: fixed; }
   .ranking th:nth-child(1) { width: 44px; }
-  .ranking th:nth-child(4) { width: 62px; }
+  .ranking th:nth-child(3) { width: 76px; }
   .ranking .names a span { overflow-wrap: anywhere; }
   /* Çift sayfası: Tur ve Oyn. sütunları gizlenir, kalanlar ekrana sığar */
   .pair-table { table-layout: fixed; font-size: 12.5px; }
@@ -197,8 +192,8 @@
   .pair-table th:nth-child(2) { width: 46px; }
   .pair-table th:nth-child(4) { width: 50px; }
   .pair-table th:nth-child(6) { width: 44px; }
-  .pair-table th:nth-child(7) { width: 50px; }
-  .pair-table th:nth-child(8) { width: 38px; }
+  .pair-table th:nth-child(7) { width: 46px; }
+  .pair-table th:nth-child(8) { width: 42px; }
   .pair-table td:nth-child(2) { padding-left: 10px; }
   .opp { min-width: 0; overflow-wrap: anywhere; }
   .res-table th, .res-table td { padding: 8px 8px; }
@@ -217,4 +212,14 @@
 }
 @media (max-width: 370px) {
   .cal-event { font-size: 8.5px; padding: 3px 1px; letter-spacing: -0.3px; }
+}
+
+/* Yüzde rozetleri */
+.pct { display: inline-block; min-width: 52px; padding: 3px 8px; border-radius: 8px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.pct.good { background: #e3f5e8; color: #1e7a3c; }
+.pct.mid { background: #fdf0de; color: #b25e09; }
+.pct.bad { background: #fde5e5; color: #c0262d; }
+.traveller .pct, .pair-table .pct { min-width: 40px; padding: 2px 6px; }
+@media (max-width: 720px) {
+  .pct, .traveller .pct, .pair-table .pct { min-width: 0; padding: 2px 4px; }
 }

@@ -5,12 +5,10 @@ import SolverFrame from "./SolverFrame";
 import {
   bridgeSolverUrl,
   fmtNum,
-  hcp,
   splitContract,
   tricksText,
   type Board,
   type BoardResult,
-  type Hand,
   type Pair,
   type Seat,
 } from "@/lib/bridge-results";
@@ -75,46 +73,12 @@ const shortName = (n: string) => {
   return w.length < 2 ? n : [...w.slice(0, -1).map((x) => `${x[0]}.`), w[w.length - 1]].join(" ");
 };
 
-const cardText = (cards: string) =>
-  cards ? cards.split("").map((c) => (c === "T" ? "10" : c)).join(" ") : "—";
-
-function HandView({ seat, hand, dealer, name }: { seat: Seat; hand: Hand; dealer: boolean; name?: string }) {
-  return (
-    <div className={`hand hand-${seat}`}>
-      <div className="hand-head">
-        {SEAT_LONG[seat]}
-        {dealer && <span className="dealer-tag">Dağıtıcı</span>}
-        <span className="hcp">{hcp(hand)} P</span>
-      </div>
-      {name && <div className="hand-name">{name}</div>}
-      {hand.map((cards, i) => (
-        <div key={i} className="suit-row">
-          <span className={SUITS[i].red ? "red" : undefined}>{SUITS[i].sym}</span>
-          <span className="hand-cards">{cardText(cards)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Diagram({ board, names }: { board: Board; names?: Partial<Record<Seat, string>> }) {
-  if (!board.hands) return null;
-  const vulNS = board.vul === "NS" || board.vul === "Hep";
-  const vulEW = board.vul === "EW" || board.vul === "Hep";
-  return (
-    <div className="diagram">
-      {(["N", "W", "E", "S"] as Seat[]).map((s) => (
-        <HandView key={s} seat={s} hand={board.hands![s]} dealer={board.dealer === s} name={names?.[s]} />
-      ))}
-      <div className={`compass${vulNS ? " vns" : ""}${vulEW ? " vew" : ""}`} aria-label="Pusula">
-        <span className="c-n">K</span>
-        <span className="c-w">B</span>
-        <span className="c-no">{board.no}</span>
-        <span className="c-e">D</span>
-        <span className="c-s">G</span>
-      </div>
-    </div>
-  );
+// Yüzde rozeti: board yüzdesi (0-100) ve toplam yüzde için ayrı eşikler
+function Pct({ v, total }: { v: number; total?: boolean }) {
+  const cls = total
+    ? v >= 55 ? "good" : v >= 45 ? "mid" : "bad"
+    : v >= 60 ? "good" : v >= 25 ? "mid" : "bad";
+  return <span className={`pct ${cls}`}>{fmtNum(v, total ? 2 : 0)}</span>;
 }
 
 // K-G'nin puanı artıysa K-G sütununda, eksiyse D-B sütununda gösterilir.
@@ -243,8 +207,8 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       <td>{resultText(r)}</td>
                       <td className="num">{score(r.scoreNS, "NS")}</td>
                       <td className="num">{score(r.scoreNS, "EW")}</td>
-                      <td className="num strong">{r.pctNS}</td>
-                      <td className="num strong">{r.pctEW}</td>
+                      <td className="num"><Pct v={r.pctNS} /></td>
+                      <td className="num"><Pct v={r.pctEW} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -256,15 +220,9 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           <div className="board-right">
             {solver ? (
               <>
-                {/* Telefonda Bridge Solver dar ekrana sığmadığı için önce kendi diyagramımız */}
-                <div className="mobile-only">
-                  <Diagram board={board} names={names} />
-                </div>
-                <div className="desktop-only">
-                  <SolverFrame src={solver} title={`Board ${board.no} double dummy analizi`} />
-                </div>
+                <SolverFrame src={solver} title={`Board ${board.no} double dummy analizi`} />
                 <a className="solver-link" href={solver} target="_blank" rel="noopener noreferrer">
-                  Bridge Solver&apos;da aç: double dummy analizi, kart kart oyna ›
+                  Bridge Solver&apos;ı tam ekran aç ›
                 </a>
               </>
             ) : (
@@ -335,7 +293,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                     <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
                     <td>{resultText(r)}</td>
                     <td className="num">{sc}</td>
-                    <td className="num strong">{ns ? r.pctNS : r.pctEW}</td>
+                    <td className="num"><Pct v={ns ? r.pctNS : r.pctEW} /></td>
                   </tr>
                 );
               })}
@@ -360,7 +318,6 @@ export default async function TournamentPage({ params, searchParams }: Props) {
               <thead>
                 <tr>
                   <th>Sıra</th>
-                  <th>No</th>
                   <th>Oyuncular</th>
                   <th className="num">%</th>
                 </tr>
@@ -369,7 +326,6 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 {group(dir).map((p) => (
                   <tr key={p.id} className={p.rank <= 3 ? `podium p${p.rank}` : undefined}>
                     <td className="rank">{p.rank}</td>
-                    <td>{p.id}</td>
                     <td className="names">
                       <a href={`${base}?cift=${p.id}`}>
                         {p.names.map((n, k) => (
@@ -377,7 +333,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                         ))}
                       </a>
                     </td>
-                    <td className="num strong">{fmtNum(p.pct, 2)}</td>
+                    <td className="num"><Pct v={p.pct} total /></td>
                   </tr>
                 ))}
               </tbody>

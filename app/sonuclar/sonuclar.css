@@ -219,7 +219,8 @@
 /* Yüzde rozetleri */
 .pct { display: inline-block; min-width: 52px; padding: 3px 8px; border-radius: 8px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
 .pct.good { background: #e3f5e8; color: #1e7a3c; }
-.pct.mid { background: #fdf0de; color: #b25e09; }
+.pct.mid { background: #fdf6cc; color: #8a6d00; }
+.pct.low { background: #fff0e3; color: #c2610c; }
 .pct.bad { background: #fde5e5; color: #c0262d; }
 .traveller .pct, .pair-table .pct { min-width: 40px; padding: 2px 6px; }
 @media (max-width: 720px) {

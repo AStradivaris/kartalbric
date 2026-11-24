@@ -74,11 +74,9 @@ const shortName = (n: string) => {
   return w.length < 2 ? n : [...w.slice(0, -1).map((x) => `${x[0]}.`), w[w.length - 1]].join(" ");
 };
 
-// Yüzde rozeti: board yüzdesi (0-100) ve toplam yüzde için ayrı eşikler
+// Yüzde rozeti: 0-24 kırmızı, 25-49 açık turuncu, 50-69 sarı, 70+ yeşil
 function Pct({ v, total }: { v: number; total?: boolean }) {
-  const cls = total
-    ? v >= 55 ? "good" : v >= 45 ? "mid" : "bad"
-    : v >= 60 ? "good" : v >= 25 ? "mid" : "bad";
+  const cls = v >= 70 ? "good" : v >= 50 ? "mid" : v >= 25 ? "low" : "bad";
   return <span className={`pct ${cls}`}>{fmtNum(v, total ? 2 : 0)}</span>;
 }
 

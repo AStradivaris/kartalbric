@@ -407,3 +407,16 @@
   .single-ranking th:nth-child(3) { width: 40px; }
   .single-ranking th:nth-child(4) { width: 62px; }
 }
+
+/* Lehman maç ekranı: bilgisayarda tablo yayılmasın, sütunlar yakın dursun */
+@media (min-width: 721px) {
+  .match-card { max-width: 520px; }
+  .table-wrap:has(.match-boards) { max-width: 520px; }
+  .match-boards { table-layout: fixed; }
+  .match-boards th, .match-boards td { padding: 9px 10px; }
+  .match-boards th:nth-child(1) { width: 66px; }
+  .match-boards th:nth-child(2) { width: 82px; }
+  .match-boards th:nth-child(3) { width: 52px; }
+  .match-boards th:nth-child(4) { width: 70px; }
+  .match-boards th:nth-child(5) { width: 80px; }
+}

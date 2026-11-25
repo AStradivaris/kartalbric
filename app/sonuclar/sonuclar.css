@@ -303,9 +303,11 @@
 /* Lehman masa sonuçları */
 .match-table .rank { font-weight: 800; width: 56px; }
 .match-table .names { white-space: normal; }
-.match-table .names a { color: var(--ink); display: flex; flex-wrap: wrap; column-gap: 6px; font-weight: 600; }
-.match-table .names a span:not(:last-child)::after { content: " -"; }
-.match-table .names a:hover { color: var(--purple); }
+.match-table .pl-links { display: flex; flex-wrap: wrap; column-gap: 6px; }
+.match-table .pl-links a { color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-color: #d9cfe3; text-underline-offset: 3px; }
+.match-table .pl-links a:not(:last-child)::after { content: " -"; text-decoration: none; display: inline-block; margin-left: 4px; }
+.match-table .pl-links a:hover { color: var(--purple); }
+.imp-total a { color: inherit !important; text-decoration: underline; text-decoration-color: #d9cfe3; text-underline-offset: 3px; }
 .imp-total { font-weight: 700; color: #6b6478; width: 76px; }
 .imp-total.win { color: #1e7a3c; font-weight: 800; }
 @media (max-width: 720px) {
@@ -314,6 +316,6 @@
   .match-table th { font-size: 10px; letter-spacing: 0; }
   .match-table th:nth-child(1) { width: 34px; }
   .match-table th:nth-child(3), .match-table th:nth-child(5) { width: 44px; }
-  .match-table .names a { flex-direction: column; }
-  .match-table .names a span:not(:last-child)::after { content: ""; }
+  .match-table .pl-links { flex-direction: column; row-gap: 2px; }
+  .match-table .pl-links a:not(:last-child)::after { content: ""; margin: 0; }
 }

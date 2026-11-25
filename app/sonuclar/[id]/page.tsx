@@ -375,6 +375,9 @@ export default async function TournamentPage({ params, searchParams }: Props) {
       {lehman && (
         <section className="rank-block">
           <h2>Masalar</h2>
+          <p className="muted small" style={{ margin: "-4px 0 12px" }}>
+            Oyuncu adına dokununca Lehman grafiği ve istatistikleri, IMP sayısına dokununca çiftin board sonuçları açılır.
+          </p>
           <div className="table-wrap">
             <table className="res-table match-table">
               <thead>
@@ -399,21 +402,25 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       <tr key={tno}>
                         <td className="rank">{tno}</td>
                         <td className="names">
-                          <a href={`${base}?cift=${ns.id}`}>
+                          <span className="pl-links">
                             {ns.names.map((n, k) => (
-                              <span key={k}>{n}</span>
+                              <a key={k} href={`/sonuclar/oyuncu?ad=${encodeURIComponent(n)}`}>{n}</a>
                             ))}
-                          </a>
+                          </span>
                         </td>
-                        <td className={`num imp-total${nsWin ? " win" : ""}`}>{fmtNum(ns.impFor ?? 0, 2)}</td>
+                        <td className={`num imp-total${nsWin ? " win" : ""}`}>
+                          <a href={`${base}?cift=${ns.id}`} title="Çift özeti">{fmtNum(ns.impFor ?? 0, 2)}</a>
+                        </td>
                         <td className="names">
-                          <a href={`${base}?cift=${ew.id}`}>
+                          <span className="pl-links">
                             {ew.names.map((n, k) => (
-                              <span key={k}>{n}</span>
+                              <a key={k} href={`/sonuclar/oyuncu?ad=${encodeURIComponent(n)}`}>{n}</a>
                             ))}
-                          </a>
+                          </span>
                         </td>
-                        <td className={`num imp-total${ewWin ? " win" : ""}`}>{fmtNum(ew.impFor ?? 0, 2)}</td>
+                        <td className={`num imp-total${ewWin ? " win" : ""}`}>
+                          <a href={`${base}?cift=${ew.id}`} title="Çift özeti">{fmtNum(ew.impFor ?? 0, 2)}</a>
+                        </td>
                       </tr>
                     );
                   })}
@@ -453,42 +460,6 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           </div>
         </section>
       ))}
-      {lehman && t.data.players && (
-        <section className="rank-block">
-          <h2>Lehman puanları</h2>
-          <p className="muted small" style={{ margin: "-4px 0 12px" }}>Oyuncunun adına dokununca Lehman grafiği ve istatistikleri açılır.</p>
-          <div className="table-wrap">
-            <table className="res-table lehman-table">
-              <thead>
-                <tr>
-                  <th>Sıra</th>
-                  <th>Oyuncu</th>
-                  <th>Masa</th>
-                  <th className="num">IMP</th>
-                  <th className="num">Lehman</th>
-                </tr>
-              </thead>
-              <tbody>
-                {t.data.players.map((pl, k) => {
-                  return (
-                    <tr key={k}>
-                      <td className="rank">{k + 1}</td>
-                      <td className="lp-name">
-                        <a href={`/sonuclar/oyuncu?ad=${encodeURIComponent(pl.name)}`}>{pl.name}</a>
-                      </td>
-                      <td>
-                        {pl.table} {SEAT_TR[pl.seat]}
-                      </td>
-                      <td className="num"><Imp v={pl.imp} /></td>
-                      <td className="num strong">{fmtNum(pl.lehman, 2)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
     </>
   );
 }

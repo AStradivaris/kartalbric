@@ -413,9 +413,17 @@
 }
 
 /* Simultane sıralama ve çift özeti: bilgisayarda içerik genişliğinde ve ortalı */
+/* Sıralama tabloları her ekranda içerik genişliğinde ve ortalı */
+.rank-block:has(.ranking) { width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; }
+.rank-block:has(.ranking) .table-wrap { width: 100%; }
+@media (max-width: 720px) {
+  .ranking { table-layout: auto !important; width: auto; }
+  .ranking th, .ranking td { padding: 9px 10px; }
+  .ranking .rank { width: auto; padding-right: 4px; }
+  .ranking .names a { font-size: 13.5px; }
+}
 @media (min-width: 721px) {
-  .rank-block:has(.ranking) { width: fit-content; min-width: 460px; max-width: 100%; margin-left: auto; margin-right: auto; }
-  .rank-block:has(.ranking) .table-wrap { width: 100%; }
+  .rank-block:has(.ranking) { min-width: 460px; }
   .ranking { width: 100%; }
   .ranking th, .ranking td { padding: 10px 16px; }
   .ranking .names { min-width: 300px; }

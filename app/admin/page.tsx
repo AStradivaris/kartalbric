@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { resolveAdminLogin } from "@/lib/admin-users";
 import { formatDate, type Announcement, type Photo } from "@/lib/data";
 import { buildTournament, type TournamentData } from "@/lib/bridge-results";
 import {
@@ -94,8 +95,11 @@ function Login() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const { error } = await getBrowserSupabase().auth.signInWithPassword({ email, password });
-    if (error) setError("E-posta veya şifre hatalı.");
+    const { error } = await getBrowserSupabase().auth.signInWithPassword({
+      email: resolveAdminLogin(email),
+      password,
+    });
+    if (error) setError("Kullanıcı adı veya şifre hatalı.");
     setBusy(false);
   }
 
@@ -104,8 +108,18 @@ function Login() {
       <h1 style={{ marginBottom: 20 }}>Yönetici girişi</h1>
       <form className="panel" onSubmit={submit}>
         <div className="field">
-          <label htmlFor="email">E-posta</label>
-          <input id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <label htmlFor="email">Kullanıcı adı</label>
+          <input
+            id="email"
+            type="text"
+            autoComplete="username"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
         <div className="field">
           <label htmlFor="password">Şifre</label>

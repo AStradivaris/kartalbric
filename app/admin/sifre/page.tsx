@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { resolveAdminLogin } from "@/lib/admin-users";
 
 // Şifre değiştirme ekranı. İki yoldan açılır:
 //  1) Giriş yapmış yönetici, panelden "Şifre değiştir"e basar.
@@ -76,7 +77,7 @@ export default function PasswordPage() {
     e.preventDefault();
     setBusy(true);
     setErr(false);
-    const { error } = await getBrowserSupabase().auth.resetPasswordForEmail(email.trim(), {
+    const { error } = await getBrowserSupabase().auth.resetPasswordForEmail(resolveAdminLogin(email), {
       redirectTo: `${window.location.origin}/admin/sifre`,
     });
     setBusy(false);
@@ -96,11 +97,7 @@ export default function PasswordPage() {
 
       {state === "ready" && (
         <form className="panel" onSubmit={save}>
-          {email && (
-            <p className="hint" style={{ margin: "0 0 16px" }}>
-              Hesap: <strong>{email}</strong>
-            </p>
-          )}
+
           <div className="field">
             <label htmlFor="pw">Yeni şifre</label>
             <input id="pw" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} required />
@@ -128,12 +125,12 @@ export default function PasswordPage() {
       {state === "nosession" && (
         <form className="panel" onSubmit={sendLink}>
           <p className="hint" style={{ margin: "0 0 16px" }}>
-            Giriş yapılmamış ya da sıfırlama bağlantısının süresi dolmuş. E-posta adresinizi yazın, yeni bir sıfırlama
-            bağlantısı gönderelim.
+            Giriş yapılmamış ya da sıfırlama bağlantısının süresi dolmuş. Kullanıcı adınızı (KBSK) ya da e-postanızı
+            yazın, kayıtlı e-postaya yeni bir sıfırlama bağlantısı gönderelim.
           </p>
           <div className="field">
-            <label htmlFor="mail">E-posta</label>
-            <input id="mail" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <label htmlFor="mail">Kullanıcı adı ya da e-posta</label>
+            <input id="mail" type="text" autoComplete="username" autoCapitalize="characters" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <button className="btn-admin" disabled={busy}>
             {busy ? "Gönderiliyor..." : "Sıfırlama bağlantısı gönder"}

@@ -158,7 +158,8 @@ export default async function PlayerPage({ searchParams }: Props) {
           Güncel Lehman: <strong className="lehman-now">{fmt(st.current)}</strong> · {st.matches.length} maç
         </p>
         <div className="view-tabs">
-          <a href={`/sonuclar/${last.tournamentId}`}>‹ Son turnuvaya dön</a>
+          <a href={`/sonuclar/lehman?y=${last.date.slice(0, 4)}&m=${Number(last.date.slice(5, 7))}`}>‹ Lehman sıralaması</a>
+          <a href={`/sonuclar/${last.tournamentId}`}>Son partisi</a>
         </div>
       </div>
 

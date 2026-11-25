@@ -18,7 +18,7 @@ export const revalidate = 60;
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ board?: string; cift?: string }>;
+  searchParams: Promise<{ board?: string; cift?: string; masa?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -124,8 +124,14 @@ export default async function TournamentPage({ params, searchParams }: Props) {
 
   const boardNo = Number(sp.board);
   const board = boards.find((b) => b.no === boardNo);
-  const pair = pairById.get(Number(sp.cift));
+  // Lehman'da "?masa=N" o masanın maçını açar; maç K-G çiftinin gözünden gösterilir.
+  const masaNo = Number(sp.masa);
+  const pair =
+    pairById.get(Number(sp.cift)) ??
+    (lehman && masaNo ? pairs.find((p) => p.table === masaNo && p.dir === "NS") : undefined);
   const withPair = (no: number) => `${base}?board=${no}${pair ? `&cift=${pair.id}` : ""}`;
+  const matchHref = (table: number | null) => `${base}?masa=${table}`;
+  const lehmanMonth = `/sonuclar/lehman?y=${t.played_on.slice(0, 4)}&m=${Number(t.played_on.slice(5, 7))}`;
 
   const head = (
     <div className="res-head">
@@ -139,11 +145,16 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           : `${pairs.length} çift · ${boards.length} board`}
       </p>
       <div className="view-tabs">
-        <a href={base} className={!board && !pair ? "on" : undefined}>Sıralama</a>
+        <a href={base} className={!board && !pair ? "on" : undefined}>{lehman ? "Masalar" : "Sıralama"}</a>
         <a href={withPair(board?.no ?? boards[0]?.no ?? 1)} className={board ? "on" : undefined}>
           Boardlar
         </a>
-        {pair && (
+        {pair && lehman && (
+          <a href={matchHref(pair.table)} className={`pair-tab${!board ? " on" : ""}`}>
+            {board ? "‹ Maça dön: " : ""}Masa {pair.table}
+          </a>
+        )}
+        {pair && !lehman && (
           <a href={`${base}?cift=${pair.id}`} className={`pair-tab${!board ? " on" : ""}`}>
             {board ? "‹ Çift özetine dön: " : ""}
             {pair.names.join(" - ")}
@@ -290,6 +301,68 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     );
   }
 
+  // ---- Lehman maç görünümü: bir masanın 14 board'u ----
+  if (pair && lehman) {
+    const ns = pairs.find((p) => p.table === pair.table && p.dir === "NS")!;
+    const ew = pairs.find((p) => p.table === pair.table && p.dir === "EW")!;
+    const rows = boards
+      .map((b) => ({ b, r: b.results.find((x) => x.table === pair.table) }))
+      .filter((x): x is { b: Board; r: BoardResult } => !!x.r);
+    const side = (p: Pair, win: boolean) => (
+      <div className={`match-side${win ? " win" : ""}`}>
+        <span className="match-dir">{p.dir === "NS" ? "Kuzey - Güney" : "Doğu - Batı"}</span>
+        {p.names.map((n, k) => (
+          <a key={k} href={`/sonuclar/oyuncu?ad=${encodeURIComponent(n)}`}>{n}</a>
+        ))}
+        <strong className="match-imp">{fmtNum(p.impFor ?? 0, 2)}</strong>
+      </div>
+    );
+    return (
+      <>
+        {head}
+        <div className="match-card">
+          {side(ns, (ns.impFor ?? 0) > (ew.impFor ?? 0))}
+          <span className="match-vs">Masa {pair.table}</span>
+          {side(ew, (ew.impFor ?? 0) > (ns.impFor ?? 0))}
+        </div>
+        <div className="table-wrap">
+          <table className="res-table match-boards">
+            <thead>
+              <tr>
+                <th>Board</th>
+                <th>Kontrat</th>
+                <th>Oyn.</th>
+                <th>Sonuç</th>
+                <th className="num">Skor</th>
+                <th className="num">IMP K-G</th>
+                <th className="num">IMP D-B</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ b, r }) => {
+                const href = `${base}?board=${b.no}&cift=${ns.id}`;
+                return (
+                  <tr key={b.no} className="row-link">
+                    <td><a href={href} className="board-link">{b.no}</a></td>
+                    <td><a href={href} className="plain"><Contract r={r} /></a></td>
+                    <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
+                    <td><Res r={r} /></td>
+                    <td className="num">{r.scoreNS === null ? "" : r.scoreNS > 0 ? `+${r.scoreNS}` : r.scoreNS}</td>
+                    <td className="num"><Imp v={r.impNS} /></td>
+                    <td className="num"><Imp v={r.impEW} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="muted small">
+          Board numarasına dokununca eller ve double dummy analizi açılır. Oyuncu adına dokununca Lehman istatistikleri açılır.
+        </p>
+      </>
+    );
+  }
+
   // ---- Çift görünümü ----
   if (pair) {
     const rows = boards
@@ -376,7 +449,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         <section className="rank-block">
           <h2>Masalar</h2>
           <p className="muted small" style={{ margin: "-4px 0 12px" }}>
-            Oyuncu adına dokununca Lehman grafiği ve istatistikleri, IMP sayısına dokununca çiftin board sonuçları açılır.
+            Bir masaya dokununca o maçın board board sonuçları açılır.
           </p>
           <div className="table-wrap">
             <table className="res-table match-table">
@@ -399,27 +472,28 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                     const nsWin = (ns.impFor ?? 0) > (ew.impFor ?? 0);
                     const ewWin = (ew.impFor ?? 0) > (ns.impFor ?? 0);
                     return (
-                      <tr key={tno}>
-                        <td className="rank">{tno}</td>
+                      <tr key={tno} className="row-link">
+                        {/* Satırın her hücresi maçın içine götürür */}
+                        <td className="rank"><a href={matchHref(tno)} className="cell-link">{tno}</a></td>
                         <td className="names">
-                          <span className="pl-links">
+                          <a href={matchHref(tno)} className="cell-link pl-links">
                             {ns.names.map((n, k) => (
-                              <a key={k} href={`/sonuclar/oyuncu?ad=${encodeURIComponent(n)}`}>{n}</a>
+                              <span key={k}>{n}</span>
                             ))}
-                          </span>
+                          </a>
                         </td>
                         <td className={`num imp-total${nsWin ? " win" : ""}`}>
-                          <a href={`${base}?cift=${ns.id}`} title="Çift özeti">{fmtNum(ns.impFor ?? 0, 2)}</a>
+                          <a href={matchHref(tno)} className="cell-link">{fmtNum(ns.impFor ?? 0, 2)}</a>
                         </td>
                         <td className="names">
-                          <span className="pl-links">
+                          <a href={matchHref(tno)} className="cell-link pl-links">
                             {ew.names.map((n, k) => (
-                              <a key={k} href={`/sonuclar/oyuncu?ad=${encodeURIComponent(n)}`}>{n}</a>
+                              <span key={k}>{n}</span>
                             ))}
-                          </span>
+                          </a>
                         </td>
                         <td className={`num imp-total${ewWin ? " win" : ""}`}>
-                          <a href={`${base}?cift=${ew.id}`} title="Çift özeti">{fmtNum(ew.impFor ?? 0, 2)}</a>
+                          <a href={matchHref(tno)} className="cell-link">{fmtNum(ew.impFor ?? 0, 2)}</a>
                         </td>
                       </tr>
                     );
@@ -427,6 +501,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
               </tbody>
             </table>
           </div>
+          <a href={lehmanMonth} className="lehman-rank-btn">
+            <span>
+              <strong>Lehman sıralaması</strong>
+              <small>Aylık sıralama ve oyuncu istatistikleri</small>
+            </span>
+            <span aria-hidden="true">›</span>
+          </a>
         </section>
       )}
       {!lehman && (["NS", "EW"] as const).map((dir) => (

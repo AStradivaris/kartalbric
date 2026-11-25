@@ -151,3 +151,59 @@ export function playerStats(list: LehmanTournament[], name: string): PlayerStats
 
 export const personAvg = (s: PersonStat | null) =>
   s && s.changeCount > 0 ? s.changeSum / s.changeCount : null;
+
+export type MonthlyRow = {
+  name: string;
+  lehman: number; // ay içindeki son Lehman
+  change: number | null; // ay başına göre değişim (ay öncesi maçı yoksa ilk maçına göre)
+  fromFirst: boolean; // değişim ayın ilk maçından itibaren mi
+  matches: number;
+  won: number;
+  imp: number; // ay içindeki toplam net IMP
+};
+
+/** Seçilen ayda Lehman oynamış oyuncuların sıralaması (ay sonundaki puana göre) */
+export function monthlyRanking(list: LehmanTournament[], y: number, m: number): MonthlyRow[] {
+  const prefix = `${y}-${String(m).padStart(2, "0")}`;
+  const before = new Map<string, number>(); // ay öncesindeki son puan
+  const rows = new Map<string, MonthlyRow & { first: number }>();
+  for (const t of sorted(list)) {
+    const inMonth = t.played_on.startsWith(prefix);
+    const after = t.played_on.slice(0, 7) > prefix;
+    if (after) break;
+    for (const p of t.data.players ?? []) {
+      const k = nameKey(p.name);
+      if (!inMonth) {
+        before.set(k, p.lehman);
+        continue;
+      }
+      const r = rows.get(k) ?? { name: p.name, lehman: p.lehman, change: null, fromFirst: false, matches: 0, won: 0, imp: 0, first: p.lehman };
+      r.name = p.name;
+      r.lehman = p.lehman;
+      r.matches++;
+      if (p.imp > 0) r.won++;
+      r.imp = Math.round((r.imp + p.imp) * 100) / 100;
+      rows.set(k, r);
+    }
+  }
+  return [...rows.entries()]
+    .map(([k, r]) => {
+      const start = before.get(k);
+      const base = start ?? (r.matches > 1 ? r.first : null);
+      return {
+        name: r.name,
+        lehman: r.lehman,
+        change: base === null ? null : Math.round((r.lehman - base) * 100) / 100,
+        fromFirst: start === undefined,
+        matches: r.matches,
+        won: r.won,
+        imp: r.imp,
+      };
+    })
+    .sort((a, b) => b.lehman - a.lehman);
+}
+
+/** Lehman oynanmış ayların listesi ("2026-11" gibi), yeniden eskiye */
+export function lehmanMonths(list: LehmanTournament[]): string[] {
+  return [...new Set(list.map((t) => t.played_on.slice(0, 7)))].sort().reverse();
+}

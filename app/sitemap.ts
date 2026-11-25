@@ -9,6 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/fitbridge`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/sonuclar`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${SITE_URL}/sonuclar/lehman`, changeFrequency: "weekly", priority: 0.7 },
   ];
 
   // Kayıt sayfaları (açık olanlar) da aranabilsin.

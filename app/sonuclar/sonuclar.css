@@ -319,3 +319,65 @@
   .match-table .pl-links { flex-direction: column; row-gap: 2px; }
   .match-table .pl-links a:not(:last-child)::after { content: ""; margin: 0; }
 }
+
+/* Satırın tamamı tıklanır */
+.row-link { cursor: pointer; }
+.row-link:hover td { background: #faf6fd; }
+.cell-link { display: block; color: inherit !important; text-decoration: none !important; margin: -10px -12px; padding: 10px 12px; }
+.match-table .cell-link.pl-links { display: flex; }
+.match-table .cell-link.pl-links span { color: var(--ink); font-weight: 600; }
+.match-table .cell-link.pl-links span:not(:last-child)::after { content: " -"; }
+@media (max-width: 720px) {
+  .cell-link { margin: -8px -5px; padding: 8px 5px; }
+  .match-table .cell-link.pl-links { flex-direction: column; }
+  .match-table .cell-link.pl-links span:not(:last-child)::after { content: ""; }
+}
+.lehman-rank-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px;
+  padding: 16px 20px; border-radius: 14px; background: var(--purple); color: #fff !important; font-size: 22px;
+}
+.lehman-rank-btn strong { display: block; font-size: 17px; }
+.lehman-rank-btn small { display: block; font-size: 13px; opacity: 0.85; font-weight: 500; }
+
+/* Lehman maç ekranı */
+.match-card { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--tint); margin-bottom: 16px; }
+.match-side { display: flex; flex-direction: column; gap: 2px; }
+.match-side:last-child { text-align: right; align-items: flex-end; }
+.match-side a { color: var(--ink); font-weight: 700; font-size: 15px; }
+.match-side a:hover { color: var(--purple); }
+.match-dir { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.match-imp { font-size: 26px; font-weight: 800; color: #6b6478; margin-top: 4px; }
+.match-side.win .match-imp { color: #1e7a3c; }
+.match-vs { font-size: 12px; font-weight: 800; color: var(--purple); text-align: center; }
+.match-boards { font-size: 14px; }
+@media (max-width: 720px) {
+  .match-card { padding: 12px; gap: 6px; }
+  .match-side a { font-size: 13px; }
+  .match-imp { font-size: 22px; }
+  .match-boards { table-layout: fixed; font-size: 12.5px; }
+  .match-boards th, .match-boards td { padding: 8px 4px; }
+  .match-boards th { font-size: 10px; letter-spacing: 0; }
+  .match-boards th:nth-child(1) { width: 44px; }
+  .match-boards th:nth-child(3) { width: 30px; }
+  .match-boards th:nth-child(4) { width: 40px; }
+  .match-boards th:nth-child(6), .match-boards th:nth-child(7) { width: 56px; }
+  .match-boards td:first-child, .match-boards th:first-child { padding-left: 10px; }
+}
+
+/* Aylık Lehman sıralaması */
+.lehman-month .rank { font-weight: 800; width: 52px; }
+.lehman-month .lm-name { white-space: normal; }
+.lehman-month .lm-name a { font-weight: 700; color: var(--ink) !important; }
+.lehman-month .podium.p1 .rank a { color: #b8860b !important; }
+.lehman-month .podium.p2 .rank a { color: #7d7d8a !important; }
+.lehman-month .podium.p3 .rank a { color: #a0522d !important; }
+@media (max-width: 720px) {
+  .lehman-month { table-layout: fixed; font-size: 13px; }
+  .lehman-month th, .lehman-month td { padding: 8px 5px; }
+  .lehman-month th { font-size: 10px; letter-spacing: 0; }
+  .lehman-month .imp-col { display: none; }
+  .lehman-month th:nth-child(1) { width: 34px; }
+  .lehman-month th:nth-child(3) { width: 34px; }
+  .lehman-month th:nth-child(5) { width: 60px; }
+  .lehman-month th:nth-child(6) { width: 58px; }
+}

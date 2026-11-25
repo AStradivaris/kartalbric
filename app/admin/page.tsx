@@ -49,6 +49,7 @@ export default function AdminPage() {
         <h1>Kartal Briç Yönetim</h1>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <a href="/">Siteyi gör</a>
+          <a href="/admin/sifre">Şifre değiştir</a>
           <button className="btn-del" onClick={() => getBrowserSupabase().auth.signOut()}>
             Çıkış
           </button>
@@ -112,6 +113,9 @@ function Login() {
         </div>
         <button className="btn-admin" disabled={busy}>Giriş yap</button>
         {error && <p className="msg err">{error}</p>}
+        <p className="hint" style={{ marginTop: 16 }}>
+          <a href="/admin/sifre">Şifremi unuttum</a>
+        </p>
       </form>
     </main>
   );

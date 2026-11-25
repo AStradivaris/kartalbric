@@ -14,7 +14,7 @@ export default function SonuclarLayout({ children }: { children: React.ReactNode
         </nav>
       </header>
       <main className="res-wrap">{children}</main>
-      <footer className="footer">
+      <footer className="footer res-footer">
         <span>Kartal Briç Spor Kulübü</span>
         <span>Kuruluş 2002</span>
       </footer>

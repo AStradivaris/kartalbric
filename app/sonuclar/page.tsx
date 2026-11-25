@@ -113,37 +113,13 @@ export default async function SonuclarPage({ searchParams }: Props) {
         })}
       </div>
 
-      <section className="res-month-list">
-        <h3>{MONTHS[m - 1]} ayının sonuçları</h3>
-        {items.length === 0 ? (
-          <p className="muted">Bu ay için yayınlanmış sonuç yok.</p>
-        ) : (
-          <ul>
-            {items.map((t) => {
-              const dt = new Date(`${t.played_on}T12:00:00Z`);
-              return (
-                <li key={t.id}>
-                  <a href={`/sonuclar/${t.id}`}>
-                    <span className="date">
-                      {dt.getUTCDate()} {MONTHS[dt.getUTCMonth()]}{" "}
-                      {DAYS[(dt.getUTCDay() + 6) % 7]}
-                    </span>
-                    <strong>{t.title}</strong>
-                    <span className="arrow" aria-hidden="true">›</span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {external && (
-          <p className="muted" style={{ marginTop: 20 }}>
-            <a href={external} target="_blank" rel="noopener noreferrer" className="inline-link">
-              Diğer sonuçlar (Vugraph) ›
-            </a>
-          </p>
-        )}
-      </section>
+      {external && (
+        <p className="muted" style={{ marginTop: 24 }}>
+          <a href={external} target="_blank" rel="noopener noreferrer" className="inline-link">
+            Diğer sonuçlar (Vugraph) ›
+          </a>
+        </p>
+      )}
     </>
   );
 }

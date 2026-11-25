@@ -393,3 +393,7 @@
 .imp-total.side-win { color: #1e7a3c; font-weight: 800; }
 .imp-total.side-lose { color: #b3383e; }
 .match-table td.side-win + td.names, .match-table td.side-lose + td.names { border-left: 1px solid var(--line); }
+
+/* Sonuç sayfalarının alt bilgisi: açık ve sade */
+.footer.res-footer { background: #f6f2f9; color: #6b6478; border-top: 1px solid var(--line); }
+.footer.res-footer span { color: #6b6478; }

@@ -400,3 +400,10 @@
 
 .lehman-chart .month-sep { stroke: #d9cfe3; stroke-width: 1; stroke-dasharray: 3 3; }
 .lehman-chart .base50 { stroke: #c9bdd6; stroke-width: 1; }
+
+/* Tek kazananlı turnuva: ortak sıralama */
+.single-ranking .dir-cell { color: var(--muted); font-size: 12.5px; font-weight: 700; }
+@media (max-width: 720px) {
+  .single-ranking th:nth-child(3) { width: 40px; }
+  .single-ranking th:nth-child(4) { width: 62px; }
+}

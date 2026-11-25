@@ -68,6 +68,7 @@ export type TournamentData = {
   pairs: Pair[];
   boards: Board[];
   players?: LehmanPlayer[];
+  singleWinner?: boolean; // tek kazananlı turnuva: K-G ve D-B için ortak sıralama
 };
 
 const VUL: Board["vul"][] = ["-", "NS", "EW", "Hep", "NS", "EW", "Hep", "-", "EW", "Hep", "-", "NS", "Hep", "-", "NS", "EW"];
@@ -105,19 +106,27 @@ export function formatName(raw: string): string {
 }
 
 /** Skor programının .txt çıktısını okur. */
-export function parseScoreText(text: string): { pairs: Pair[]; results: Map<number, BoardResult[]> } {
+export function parseScoreText(text: string): {
+  pairs: Pair[];
+  results: Map<number, BoardResult[]>;
+  singleWinner: boolean;
+} {
   const lines = text.replace(/^﻿/, "").split(/\r?\n/);
   const pairs: Pair[] = [];
   const results = new Map<number, BoardResult[]>();
   let mode: "pairs" | "boards" | null = null;
   let head: string[] = [];
+  let singleWinner = false;
 
   for (const line of lines) {
     if (!line.trim()) continue;
     const cols = line.split("\t");
     const first = clean(cols[0]);
-    if (first === "PrimaryGrouping" || first === "Board") {
+    // Çift tablosu "PrimaryGrouping" (K-G ve D-B ayrı sıralama) ya da
+    // doğrudan "Rank" (tek kazananlı, ortak sıralama) ile başlar.
+    if (first === "PrimaryGrouping" || first === "Rank" || first === "Board") {
       mode = first === "Board" ? "boards" : "pairs";
+      if (first === "Rank") singleWinner = true;
       head = cols.map((c) => clean(c));
       continue;
     }
@@ -175,7 +184,7 @@ export function parseScoreText(text: string): { pairs: Pair[]; results: Map<numb
   if (pairs.length === 0 || results.size === 0) {
     throw new Error("Skor dosyasında çift sıralaması ya da board sonuçları bulunamadı.");
   }
-  return { pairs, results };
+  return { pairs, results, singleWinner };
 }
 
 const RANKS = "AKQJT98765432";
@@ -326,10 +335,14 @@ export function buildTournament(scoreText: string, dupBytes: Uint8Array | null):
           : b.mpNS - a.mpNS || (b.scoreNS ?? 0) - (a.scoreNS ?? 0) || a.table - b.table
       ),
   }));
-  pairs.sort((a, b) => (a.dir === b.dir ? a.rank - b.rank : a.dir === "NS" ? -1 : 1));
+  const singleWinner = !isLehman && "singleWinner" in parsed && parsed.singleWinner === true;
+  if (singleWinner) pairs.sort((a, b) => a.rank - b.rank);
+  else pairs.sort((a, b) => (a.dir === b.dir ? a.rank - b.rank : a.dir === "NS" ? -1 : 1));
   return isLehman
     ? { version: 1, kind: "lehman", pairs, boards, players: parsed.players }
-    : { version: 1, pairs, boards };
+    : singleWinner
+      ? { version: 1, pairs, boards, singleWinner: true }
+      : { version: 1, pairs, boards };
 }
 
 // ---- Bridge Solver ----

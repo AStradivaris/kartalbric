@@ -517,7 +517,40 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           </a>
         </section>
       )}
-      {!lehman && (["NS", "EW"] as const).map((dir) => (
+      {!lehman && t.data.singleWinner && (
+        <section className="rank-block">
+          <h2>Genel sıralama</h2>
+          <div className="table-wrap">
+            <table className="res-table ranking single-ranking">
+              <thead>
+                <tr>
+                  <th>Sıra</th>
+                  <th>Oyuncular</th>
+                  <th>Yön</th>
+                  <th className="num">{unit}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...pairs].sort((a, b) => a.rank - b.rank).map((p) => (
+                  <tr key={p.id} className={p.rank <= 3 ? `podium p${p.rank}` : undefined}>
+                    <td className="rank">{p.rank}</td>
+                    <td className="names">
+                      <a href={`${base}?cift=${p.id}`}>
+                        {p.names.map((n, k) => (
+                          <span key={k}>{n}</span>
+                        ))}
+                      </a>
+                    </td>
+                    <td className="dir-cell">{p.dir === "NS" ? "K-G" : "D-B"}</td>
+                    <td className="num"><Pct v={p.pct} total /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+      {!lehman && !t.data.singleWinner && (["NS", "EW"] as const).map((dir) => (
         <section key={dir} className="rank-block">
           <h2>{dir === "NS" ? "Kuzey - Güney" : "Doğu - Batı"}</h2>
           <div className="table-wrap">

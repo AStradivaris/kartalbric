@@ -775,12 +775,12 @@ function TournamentUpload() {
       <form className="panel" onSubmit={save}>
         <h2>Turnuva sonucu yükle</h2>
         <p className="hint" style={{ margin: "0 0 16px" }}>
-          Skor programının sonuç dosyasını (.txt) ve dağıtım dosyasını (.dup) seçin. Sonuçlar
+          Skor programının sonuç dosyasını (.txt; Lehman turnuvasında .xml) ve dağıtım dosyasını (.dup) seçin. Sonuçlar
           kartalbric.com/sonuclar takviminde, seçtiğiniz tarihte görünür.
         </p>
         <div className="field">
-          <label htmlFor="t-txt">Sonuç dosyası (.txt)</label>
-          <input id="t-txt" type="file" accept=".txt,text/plain" onChange={(e) => pickTxt(e.target.files?.[0])} />
+          <label htmlFor="t-txt">Sonuç dosyası (.txt ya da Lehman .xml)</label>
+          <input id="t-txt" type="file" accept=".txt,.xml,text/plain,text/xml,application/xml" onChange={(e) => pickTxt(e.target.files?.[0])} />
           {txtName && <span className="hint" style={{ margin: 0 }}>{txtName}</span>}
         </div>
         <div className="field">
@@ -810,9 +810,11 @@ function TournamentUpload() {
               {data.pairs.length} çift · {data.boards.length} board ·{" "}
               {withHands > 0 ? `${withHands} board'un eli var` : "eller yok (.dup seçilmedi)"}
               <br />
-              {ns && `K-G 1.: ${ns.names.join(" - ")} (%${ns.pct.toFixed(2)})`}
+              {data.kind === "lehman" && `Lehman turnuvası · ${data.players?.length ?? 0} oyuncu`}
+              {data.kind === "lehman" && <br />}
+              {ns && `K-G 1.: ${ns.names.join(" - ")} (${data.kind === "lehman" ? `${ns.imp} IMP` : `%${ns.pct.toFixed(2)}`})`}
               <br />
-              {ew && `D-B 1.: ${ew.names.join(" - ")} (%${ew.pct.toFixed(2)})`}
+              {ew && `D-B 1.: ${ew.names.join(" - ")} (${data.kind === "lehman" ? `${ew.imp} IMP` : `%${ew.pct.toFixed(2)}`})`}
             </p>
           </div>
         )}

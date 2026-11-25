@@ -92,6 +92,13 @@ function Pct({ v, total }: { v: number; total?: boolean }) {
   return <span className={`pct ${cls}`}>{fmtNum(v, total ? 2 : 0)}</span>;
 }
 
+// IMP rozeti (Lehman): artı yeşil, eksi kırmızı, sıfır sarı
+function Imp({ v }: { v: number | undefined }) {
+  const x = v ?? 0;
+  const txt = x.toLocaleString("tr-TR", { maximumFractionDigits: 2 });
+  return <span className={`pct ${x > 0 ? "good" : x < 0 ? "bad" : "mid"}`}>{x > 0 ? `+${txt}` : txt}</span>;
+}
+
 // K-G'nin puanı artıysa K-G sütununda, eksiyse D-B sütununda gösterilir.
 function score(n: number | null, side: "NS" | "EW") {
   if (n === null) return "";
@@ -106,6 +113,11 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   if (!t) notFound();
 
   const { pairs, boards } = t.data;
+  const lehman = t.data.kind === "lehman";
+  const unit = lehman ? "IMP" : "%";
+  // Board satırında taraf puanı: Lehman'da IMP, eşlide yüzde
+  const sideScore = (r: BoardResult, side: "NS" | "EW") =>
+    lehman ? <Imp v={side === "NS" ? r.impNS : r.impEW} /> : <Pct v={side === "NS" ? r.pctNS : r.pctEW} />;
   const pairById = new Map(pairs.map((p) => [p.id, p]));
   const pairName = (pid: number) => pairById.get(pid)?.names.join(" - ") ?? `Çift ${pid}`;
   const base = `/sonuclar/${t.id}`;
@@ -122,7 +134,9 @@ export default async function TournamentPage({ params, searchParams }: Props) {
       </p>
       <h1>{t.title}</h1>
       <p className="muted">
-        {pairs.length} çift · {boards.length} board
+        {lehman
+          ? `Lehman · ${t.data.players?.length ?? pairs.length * 2} oyuncu · ${pairs.length / 2} masa · ${boards.length} board`
+          : `${pairs.length} çift · ${boards.length} board`}
       </p>
       <div className="view-tabs">
         <a href={base} className={!board && !pair ? "on" : undefined}>Sıralama</a>
@@ -169,7 +183,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         </div>
         <p className="board-info">
           Dağıtıcı: <strong>{SEAT_LONG[board.dealer]}</strong> · Zon: <strong>{VUL_TR[board.vul]}</strong>
-          {mine && <> · Masa {mine.table}, Tur {mine.round}</>}
+          {mine && <> · Masa {mine.table}{lehman ? "" : `, Tur ${mine.round}`}</>}
         </p>
 
         <div className="board-layout">
@@ -184,7 +198,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                     <th rowSpan={2}>Oyn.</th>
                     <th rowSpan={2}>Sonuç</th>
                     <th colSpan={2} className="grp">Skor</th>
-                    <th colSpan={2} className="grp">%</th>
+                    <th colSpan={2} className="grp">{unit}</th>
                   </tr>
                   <tr>
                     <th>K-G</th>
@@ -212,8 +226,8 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       <td><Res r={r} /></td>
                       <td className="num">{score(r.scoreNS, "NS")}</td>
                       <td className="num">{score(r.scoreNS, "EW")}</td>
-                      <td className="num"><Pct v={r.pctNS} /></td>
-                      <td className="num"><Pct v={r.pctEW} /></td>
+                      <td className="num">{sideScore(r, "NS")}</td>
+                      <td className="num">{sideScore(r, "EW")}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -228,7 +242,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                     <th>D-B</th>
                     <th>Kontrat</th>
                     <th className="num">Skor</th>
-                    <th className="num">%</th>
+                    <th className="num">{unit}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -248,8 +262,8 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       </td>
                       <td className="num">{r.scoreNS === null ? "" : r.scoreNS > 0 ? `+${r.scoreNS}` : r.scoreNS}</td>
                       <td className="num m-pct">
-                        <Pct v={r.pctNS} />
-                        <Pct v={r.pctEW} />
+                        {sideScore(r, "NS")}
+                        {sideScore(r, "EW")}
                       </td>
                     </tr>
                   ))}
@@ -295,7 +309,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           <div>
             <h2>{pair.names.join(" - ")}</h2>
             <p className="muted">
-              Çift {pair.id} · %{fmtNum(pair.pct, 2)}
+              {lehman ? (
+                <>
+                  Masa {pair.table} · {pair.dir === "NS" ? "Kuzey-Güney" : "Doğu-Batı"} · <Imp v={pair.imp} /> IMP
+                </>
+              ) : (
+                <>Çift {pair.id} · %{fmtNum(pair.pct, 2)}</>
+              )}
             </p>
           </div>
         </div>
@@ -310,7 +330,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 <th>Oyn.</th>
                 <th>Sonuç</th>
                 <th className="num">Skor</th>
-                <th className="num">%</th>
+                <th className="num">{unit}</th>
               </tr>
             </thead>
             <tbody>
@@ -335,7 +355,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                     <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
                     <td><Res r={r} /></td>
                     <td className="num">{sc}</td>
-                    <td className="num"><Pct v={ns ? r.pctNS : r.pctEW} /></td>
+                    <td className="num">{sideScore(r, ns ? "NS" : "EW")}</td>
                   </tr>
                 );
               })}
@@ -361,7 +381,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 <tr>
                   <th>Sıra</th>
                   <th>Oyuncular</th>
-                  <th className="num">%</th>
+                  <th className="num">{unit}</th>
                 </tr>
               </thead>
               <tbody>
@@ -375,7 +395,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                         ))}
                       </a>
                     </td>
-                    <td className="num"><Pct v={p.pct} total /></td>
+                    <td className="num">{lehman ? <Imp v={p.imp} /> : <Pct v={p.pct} total />}</td>
                   </tr>
                 ))}
               </tbody>
@@ -383,6 +403,42 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           </div>
         </section>
       ))}
+      {lehman && t.data.players && (
+        <section className="rank-block">
+          <h2>Lehman puanları</h2>
+          <p className="muted small" style={{ margin: "-4px 0 12px" }}>Oyuncunun adına dokununca Lehman grafiği ve istatistikleri açılır.</p>
+          <div className="table-wrap">
+            <table className="res-table lehman-table">
+              <thead>
+                <tr>
+                  <th>Sıra</th>
+                  <th>Oyuncu</th>
+                  <th>Masa</th>
+                  <th className="num">IMP</th>
+                  <th className="num">Lehman</th>
+                </tr>
+              </thead>
+              <tbody>
+                {t.data.players.map((pl, k) => {
+                  return (
+                    <tr key={k}>
+                      <td className="rank">{k + 1}</td>
+                      <td className="lp-name">
+                        <a href={`/sonuclar/oyuncu?ad=${encodeURIComponent(pl.name)}`}>{pl.name}</a>
+                      </td>
+                      <td>
+                        {pl.table} {SEAT_TR[pl.seat]}
+                      </td>
+                      <td className="num"><Imp v={pl.imp} /></td>
+                      <td className="num strong">{fmtNum(pl.lehman, 2)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </>
   );
 }

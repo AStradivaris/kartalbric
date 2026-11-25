@@ -15,6 +15,20 @@ export type Pair = {
   mp: number;
   pct: number;
   boards: number;
+  imp?: number; // Lehman: masadaki net IMP (K-G için artı, D-B için kendi açısından)
+  impFor?: number; // Lehman: masada alınan IMP
+  impAgainst?: number; // Lehman: masada verilen IMP
+};
+
+// Lehman turnuvasında bireysel oyuncu
+export type LehmanPlayer = {
+  name: string;
+  seat: Seat;
+  table: number;
+  lehman: number; // oyuncunun Lehman puanı
+  imp: number; // oturduğu tarafın net IMP'si
+  impFor?: number;
+  impAgainst?: number;
 };
 
 export type BoardResult = {
@@ -31,6 +45,8 @@ export type BoardResult = {
   mpEW: number;
   pctNS: number;
   pctEW: number;
+  impNS?: number; // Lehman / IMP turnuvaları
+  impEW?: number;
 };
 
 // Her el 4 renk: [♠, ♥, ♦, ♣], kartlar "AKQJT98..." biçiminde
@@ -46,8 +62,10 @@ export type Board = {
 
 export type TournamentData = {
   version: 1;
+  kind?: "pairs" | "lehman"; // yoksa "pairs" (yüzdeli eşli turnuva)
   pairs: Pair[];
   boards: Board[];
+  players?: LehmanPlayer[];
 };
 
 const VUL: Board["vul"][] = ["-", "NS", "EW", "Hep", "NS", "EW", "Hep", "-", "EW", "Hep", "-", "NS", "Hep", "-", "NS", "EW"];
@@ -192,8 +210,105 @@ export function parseDup(bytes: Uint8Array): Record<Seat, Hand>[] {
 }
 
 /** İki dosyayı birleştirip sayfada gösterilecek veriyi üretir. */
+/** Kontrat metni: "3NN+1", "5DXE-1", "4SXXN=", "PASS" */
+function parseVugraphContract(c: string): { contract: string; declarer: Seat | ""; tricks: number | null } {
+  const t = c.trim().toUpperCase();
+  if (!t || t.startsWith("PAS")) return { contract: "Pass", declarer: "", tricks: null };
+  const m = /^([1-7])([SHDCN])(X{0,2})([NESW])([=+-])(\d*)$/.exec(t);
+  if (!m) return { contract: t, declarer: "", tricks: null };
+  const level = Number(m[1]);
+  const diff = m[5] === "=" ? 0 : (m[5] === "+" ? 1 : -1) * Number(m[6] || 0);
+  return { contract: `${m[1]}${m[2]}${m[3]}`, declarer: m[4] as Seat, tricks: 6 + level + diff };
+}
+
+const xmlText = (block: string, tag: string) => {
+  const m = new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`).exec(block);
+  return m ? m[1].trim() : "";
+};
+const SEAT_OF: Record<string, Seat> = { north: "N", east: "E", south: "S", west: "W" };
+
+/** Vugraph Lehman sonuç dosyası (.xml) */
+export function parseLehmanXml(text: string): {
+  pairs: Pair[];
+  players: LehmanPlayer[];
+  results: Map<number, BoardResult[]>;
+} {
+  const tables = [...text.matchAll(/<table no="(\d+)">([\s\S]*?)<\/table>/g)];
+  if (tables.length === 0) throw new Error("Lehman dosyasında masa bulunamadı.");
+  const pairs: Pair[] = [];
+  const players: LehmanPlayer[] = [];
+  const results = new Map<number, BoardResult[]>();
+
+  for (const [, noStr, body] of tables) {
+    const table = Number(noStr);
+    const seatName: Partial<Record<Seat, string>> = {};
+    for (const [, dir, pb] of body.matchAll(/<player direction="(\w+)">([\s\S]*?)<\/player>/g)) {
+      const seat = SEAT_OF[dir.toLowerCase()];
+      if (!seat) continue;
+      const name = formatName(xmlText(pb, "name"));
+      seatName[seat] = name;
+      players.push({ name, seat, table, lehman: Number(xmlText(pb, "lehman")) || 0, imp: 0 });
+    }
+    const nsId = table * 2 - 1;
+    const ewId = table * 2;
+    let net = 0;
+    for (const [, bno, bb] of body.matchAll(/<board no="(\d+)">([\s\S]*?)<\/board>/g)) {
+      const c = parseVugraphContract(xmlText(bb, "contract"));
+      const imp = Math.round(Number(xmlText(bb, "imp")) * 100) / 100 || 0;
+      net += imp;
+      const scoreTxt = xmlText(bb, "score");
+      const r: BoardResult = {
+        table,
+        round: 1,
+        ns: nsId,
+        ew: ewId,
+        contract: c.contract,
+        declarer: c.declarer,
+        tricks: c.tricks,
+        scoreNS: scoreTxt === "" ? null : Number(scoreTxt),
+        adjusted: null,
+        mpNS: 0,
+        mpEW: 0,
+        pctNS: 0,
+        pctEW: 0,
+        impNS: imp,
+        impEW: -imp,
+      };
+      const b = Number(bno);
+      if (!results.has(b)) results.set(b, []);
+      results.get(b)!.push(r);
+    }
+    net = Math.round(net * 100) / 100;
+    const nBoards = [...body.matchAll(/<board no=/g)].length;
+    const impNS = Number(xmlText(body, "impNS")) || 0;
+    const impEW = Number(xmlText(body, "impEW")) || 0;
+    pairs.push(
+      { id: nsId, rank: 0, dir: "NS", table, names: [seatName.N ?? "", seatName.S ?? ""], mp: 0, pct: 0, boards: nBoards, imp: net, impFor: impNS, impAgainst: impEW },
+      { id: ewId, rank: 0, dir: "EW", table, names: [seatName.E ?? "", seatName.W ?? ""], mp: 0, pct: 0, boards: nBoards, imp: -net, impFor: impEW, impAgainst: impNS }
+    );
+    for (const p of players) {
+      if (p.table !== table) continue;
+      const ns = p.seat === "N" || p.seat === "S";
+      p.imp = ns ? net : -net;
+      p.impFor = ns ? impNS : impEW;
+      p.impAgainst = ns ? impEW : impNS;
+    }
+  }
+  for (const dir of ["NS", "EW"] as const) {
+    pairs
+      .filter((p) => p.dir === dir)
+      .sort((a, b) => (b.imp ?? 0) - (a.imp ?? 0))
+      .forEach((p, i) => (p.rank = i + 1));
+  }
+  players.sort((a, b) => b.lehman - a.lehman);
+  return { pairs, players, results };
+}
+
+/** Dosyaları birleştirip sayfada gösterilecek veriyi üretir (.txt eşli ya da .xml Lehman). */
 export function buildTournament(scoreText: string, dupBytes: Uint8Array | null): TournamentData {
-  const { pairs, results } = parseScoreText(scoreText);
+  const isLehman = /<lehmanResult[\s>]/.test(scoreText);
+  const parsed = isLehman ? parseLehmanXml(scoreText) : { ...parseScoreText(scoreText), players: undefined };
+  const { pairs, results } = parsed;
   const deals = dupBytes ? parseDup(dupBytes) : [];
   const boardNos = [...results.keys()].sort((a, b) => a - b);
   const boards: Board[] = boardNos.map((no) => ({
@@ -203,10 +318,16 @@ export function buildTournament(scoreText: string, dupBytes: Uint8Array | null):
     hands: deals[no - 1] ?? null,
     results: results
       .get(no)!
-      .sort((a, b) => b.mpNS - a.mpNS || (b.scoreNS ?? 0) - (a.scoreNS ?? 0) || a.table - b.table),
+      .sort((a, b) =>
+        isLehman
+          ? (b.impNS ?? 0) - (a.impNS ?? 0) || a.table - b.table
+          : b.mpNS - a.mpNS || (b.scoreNS ?? 0) - (a.scoreNS ?? 0) || a.table - b.table
+      ),
   }));
   pairs.sort((a, b) => (a.dir === b.dir ? a.rank - b.rank : a.dir === "NS" ? -1 : 1));
-  return { version: 1, pairs, boards };
+  return isLehman
+    ? { version: 1, kind: "lehman", pairs, boards, players: parsed.players }
+    : { version: 1, pairs, boards };
 }
 
 // ---- Bridge Solver ----

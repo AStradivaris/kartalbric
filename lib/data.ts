@@ -210,3 +210,15 @@ export async function getTournamentDetail(
     .maybeSingle();
   return (data as (TournamentListItem & { data: import("./bridge-results").TournamentData }) | null) ?? null;
 }
+
+/** Sitede yayınlanmış tüm Lehman turnuvaları (oyuncu istatistikleri için) */
+export async function getLehmanTournaments(): Promise<import("./lehman-stats").LehmanTournament[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data } = await sb
+    .from("tournaments")
+    .select("id,title,played_on,data")
+    .eq("data->>kind", "lehman")
+    .order("played_on", { ascending: true });
+  return (data as import("./lehman-stats").LehmanTournament[]) ?? [];
+}

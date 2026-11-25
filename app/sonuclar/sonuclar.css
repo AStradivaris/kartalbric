@@ -260,3 +260,42 @@
 .res-down { color: #c0262d; }
 .res-up { color: #1e7a3c; }
 .res-eq { color: #2563c9; }
+
+/* Lehman puan tablosu */
+.lehman-table .rank { font-weight: 800; width: 48px; }
+.lehman-table .lp-name { white-space: normal; }
+.lehman-table .lp-name a { color: var(--ink); }
+@media (max-width: 720px) {
+  .lehman-table { table-layout: fixed; }
+  .lehman-table th, .lehman-table td { padding: 8px 5px; }
+  .lehman-table th:nth-child(1) { width: 34px; }
+  .lehman-table th:nth-child(3) { width: 42px; }
+  .lehman-table th:nth-child(4) { width: 62px; }
+  .lehman-table th:nth-child(5) { width: 64px; }
+}
+
+/* Oyuncu istatistik sayfası */
+.lehman-now { color: var(--purple); font-size: 18px; }
+.lehman-chart { max-width: 760px; margin: 0; border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 0; background: #fff; }
+.lehman-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.lehman-chart .grid { stroke: #eee9f2; stroke-width: 1; }
+.lehman-chart .axis { fill: #8a8396; font-size: 12px; font-family: inherit; }
+.lehman-chart .line { fill: none; stroke: var(--purple); stroke-width: 2; stroke-linejoin: round; }
+.lehman-chart .dot { fill: var(--purple); stroke: #fff; stroke-width: 2; pointer-events: none; }
+.lehman-chart .hit { fill: transparent; cursor: pointer; }
+.lehman-chart .pt:hover .dot { r: 7; }
+.lehman-chart .val { fill: var(--ink); font-size: 12.5px; font-weight: 700; font-family: inherit; pointer-events: none; }
+.stats-table th { text-transform: none; letter-spacing: 0; font-size: 13.5px; color: #4b4458; width: 46%; white-space: normal; border-top: 1px solid var(--line); background: #faf7fc; }
+.stats-table tr:first-child th, .stats-table tr:first-child td { border-top: 0; }
+.stats-table td { white-space: normal; font-weight: 600; }
+.stats-table td a { color: var(--purple); }
+.player-matches td.wrap { white-space: normal; }
+.plain-link { color: var(--ink) !important; font-weight: 600 !important; }
+.plain-link.block { display: block; }
+.chg { display: block; font-size: 11.5px; font-weight: 700; }
+@media (max-width: 720px) {
+  .player-matches { font-size: 12.5px; }
+  .player-matches th, .player-matches td { padding: 8px 5px; }
+  .lehman-chart .axis { font-size: 13px; }
+  .lehman-chart .val { font-size: 14px; }
+}

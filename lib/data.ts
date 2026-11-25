@@ -219,6 +219,7 @@ export async function getLehmanTournaments(): Promise<import("./lehman-stats").L
     .from("tournaments")
     .select("id,title,played_on,data")
     .eq("data->>kind", "lehman")
-    .order("played_on", { ascending: true });
+    .order("played_on", { ascending: true })
+    .order("created_at", { ascending: true });
   return (data as import("./lehman-stats").LehmanTournament[]) ?? [];
 }

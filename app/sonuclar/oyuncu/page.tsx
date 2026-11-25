@@ -16,6 +16,17 @@ const fmt = (n: number, d = 2) => n.toLocaleString("tr-TR", { minimumFractionDig
 const signed = (n: number, d = 2) => `${n > 0 ? "+" : ""}${fmt(n, d)}`;
 const MONTHS = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
 const shortDate = (iso: string) => `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1]}`;
+// Aynı gün birden çok parti varsa tarihe parti numarası eklenir: "24 Kas-2"
+function dateLabels(matches: PlayerMatch[]): string[] {
+  const seen = new Map<string, number>();
+  const total = new Map<string, number>();
+  for (const m of matches) total.set(m.date, (total.get(m.date) ?? 0) + 1);
+  return matches.map((m) => {
+    const k = (seen.get(m.date) ?? 0) + 1;
+    seen.set(m.date, k);
+    return (total.get(m.date) ?? 1) > 1 ? `${shortDate(m.date)}-${k}` : shortDate(m.date);
+  });
+}
 const playerHref = (n: string) => `/sonuclar/oyuncu?ad=${encodeURIComponent(n)}`;
 
 // Lehman puanının maçtan maça seyri: tek seri, çizgi + noktalar.
@@ -42,6 +53,7 @@ function LehmanChart({ matches }: { matches: PlayerMatch[] }) {
   const minI = vals.indexOf(Math.min(...vals));
   const labelled = new Set([n - 1, maxI, minI, 0]);
   const xEvery = Math.max(1, Math.ceil(n / 6));
+  const labels = dateLabels(matches);
   const path = matches.map((m, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(m.lehman).toFixed(1)}`).join(" ");
 
   return (
@@ -71,7 +83,7 @@ function LehmanChart({ matches }: { matches: PlayerMatch[] }) {
             )}
             {(i % xEvery === 0 || i === n - 1) && (
               <text x={x(i)} y={H - 10} className="axis" textAnchor="middle">
-                {shortDate(m.date)}
+                {labels[i]}
               </text>
             )}
           </g>
@@ -133,6 +145,7 @@ export default async function PlayerPage({ searchParams }: Props) {
   const st = playerStats(list, ad);
   if (!st) notFound();
   const last = st.matches[st.matches.length - 1];
+  const labels = dateLabels(st.matches);
 
   return (
     <>
@@ -178,10 +191,10 @@ export default async function PlayerPage({ searchParams }: Props) {
               </tr>
             </thead>
             <tbody>
-              {[...st.matches].reverse().map((m) => (
+              {st.matches.map((m, i) => ({ m, label: labels[i] })).reverse().map(({ m, label }) => (
                 <tr key={m.tournamentId}>
                   <td>
-                    <a href={`/sonuclar/${m.tournamentId}?cift=${m.pairId}`}>{shortDate(m.date)}</a>
+                    <a href={`/sonuclar/${m.tournamentId}?cift=${m.pairId}`}>{label}</a>
                   </td>
                   <td className="wrap">
                     <a href={playerHref(m.partner)} className="plain-link">{m.partner}</a>

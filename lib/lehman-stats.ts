@@ -59,8 +59,12 @@ export function allLehmanPlayers(list: LehmanTournament[]): { name: string; lehm
   return [...map.values()].sort((a, b) => b.lehman - a.lehman);
 }
 
+// Tarihe göre; aynı gün oynanan partiler yüklenme sırasını (listenin gelen sırasını) korur.
 function sorted(list: LehmanTournament[]) {
-  return [...list].sort((a, b) => a.played_on.localeCompare(b.played_on));
+  return list
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => a.t.played_on.localeCompare(b.t.played_on) || a.i - b.i)
+    .map((x) => x.t);
 }
 
 export function playerStats(list: LehmanTournament[], name: string): PlayerStats | null {

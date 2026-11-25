@@ -362,7 +362,8 @@
   .match-boards th:nth-child(1) { width: 44px; }
   .match-boards th:nth-child(3) { width: 30px; }
   .match-boards th:nth-child(4) { width: 40px; }
-  .match-boards th:nth-child(6), .match-boards th:nth-child(7) { width: 56px; }
+  .match-boards th:nth-child(5) { width: 54px; }
+  .match-boards th:nth-child(6) { width: 62px; }
   .match-boards td:first-child, .match-boards th:first-child { padding-left: 10px; }
 }
 

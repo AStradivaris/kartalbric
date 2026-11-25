@@ -92,6 +92,9 @@ function Pct({ v, total }: { v: number; total?: boolean }) {
   return <span className={`pct ${cls}`}>{fmtNum(v, total ? 2 : 0)}</span>;
 }
 
+// IMP toplamı: tam sayıysa ondalıksız (52), değilse en fazla 2 hane (31,5)
+const fmtImp = (n: number) => n.toLocaleString("tr-TR", { maximumFractionDigits: 2 });
+
 // IMP rozeti (Lehman): artı yeşil, eksi kırmızı, sıfır sarı
 function Imp({ v }: { v: number | undefined }) {
   const x = v ?? 0;
@@ -150,7 +153,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           Boardlar
         </a>
         {pair && lehman && (
-          <a href={matchHref(pair.table)} className={`pair-tab${!board ? " on" : ""}`}>
+          <a href={`${base}?cift=${pair.id}`} className={`pair-tab${!board ? " on" : ""}`}>
             {board ? "‹ Maça dön: " : ""}Masa {pair.table}
           </a>
         )}
@@ -305,6 +308,8 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   if (pair && lehman) {
     const ns = pairs.find((p) => p.table === pair.table && p.dir === "NS")!;
     const ew = pairs.find((p) => p.table === pair.table && p.dir === "EW")!;
+    // Seçilen çiftin tarafı: skor ve IMP o çiftin gözünden gösterilir
+    const mySide = pair.dir;
     const rows = boards
       .map((b) => ({ b, r: b.results.find((x) => x.table === pair.table) }))
       .filter((x): x is { b: Board; r: BoardResult } => !!x.r);
@@ -314,7 +319,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         {p.names.map((n, k) => (
           <a key={k} href={`/sonuclar/oyuncu?ad=${encodeURIComponent(n)}`}>{n}</a>
         ))}
-        <strong className="match-imp">{fmtNum(p.impFor ?? 0, 2)}</strong>
+        <strong className="match-imp">{fmtImp(p.impFor ?? 0)}</strong>
       </div>
     );
     return (
@@ -334,22 +339,21 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 <th>Oyn.</th>
                 <th>Sonuç</th>
                 <th className="num">Skor</th>
-                <th className="num">IMP K-G</th>
-                <th className="num">IMP D-B</th>
+                <th className="num">IMP {mySide === "NS" ? "K-G" : "D-B"}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map(({ b, r }) => {
-                const href = `${base}?board=${b.no}&cift=${ns.id}`;
+                const href = `${base}?board=${b.no}&cift=${pair.id}`;
+                const sc = r.scoreNS === null ? null : mySide === "NS" ? r.scoreNS : -r.scoreNS;
                 return (
                   <tr key={b.no} className="row-link">
                     <td><a href={href} className="board-link">{b.no}</a></td>
                     <td><a href={href} className="plain"><Contract r={r} /></a></td>
                     <td>{r.declarer ? SEAT_TR[r.declarer] : ""}</td>
                     <td><Res r={r} /></td>
-                    <td className="num">{r.scoreNS === null ? "" : r.scoreNS > 0 ? `+${r.scoreNS}` : r.scoreNS}</td>
-                    <td className="num"><Imp v={r.impNS} /></td>
-                    <td className="num"><Imp v={r.impEW} /></td>
+                    <td className="num">{sc === null ? "" : sc > 0 ? `+${sc}` : sc}</td>
+                    <td className="num"><Imp v={mySide === "NS" ? r.impNS : r.impEW} /></td>
                   </tr>
                 );
               })}
@@ -479,24 +483,24 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                         {/* Satırın her hücresi maçın içine götürür */}
                         <td className="rank"><a href={matchHref(tno)} className="cell-link">{tno}</a></td>
                         <td className={`names ${nsCls}`}>
-                          <a href={matchHref(tno)} className="cell-link pl-links">
+                          <a href={`${base}?cift=${ns.id}`} className="cell-link pl-links">
                             {ns.names.map((n, k) => (
                               <span key={k}>{n}</span>
                             ))}
                           </a>
                         </td>
                         <td className={`num imp-total ${nsCls}`}>
-                          <a href={matchHref(tno)} className="cell-link">{fmtNum(ns.impFor ?? 0, 2)}</a>
+                          <a href={`${base}?cift=${ns.id}`} className="cell-link">{fmtImp(ns.impFor ?? 0)}</a>
                         </td>
                         <td className={`names ${ewCls}`}>
-                          <a href={matchHref(tno)} className="cell-link pl-links">
+                          <a href={`${base}?cift=${ew.id}`} className="cell-link pl-links">
                             {ew.names.map((n, k) => (
                               <span key={k}>{n}</span>
                             ))}
                           </a>
                         </td>
                         <td className={`num imp-total ${ewCls}`}>
-                          <a href={matchHref(tno)} className="cell-link">{fmtNum(ew.impFor ?? 0, 2)}</a>
+                          <a href={`${base}?cift=${ew.id}`} className="cell-link">{fmtImp(ew.impFor ?? 0)}</a>
                         </td>
                       </tr>
                     );

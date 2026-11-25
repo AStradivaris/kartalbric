@@ -72,3 +72,10 @@
 .saved { font-size: 12px; font-weight: 700; color: var(--purple); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .thumbs { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+
+/* Sayfa numaraları */
+.pager { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; margin-top: 14px; }
+.pager button { min-width: 38px; height: 38px; border-radius: 10px; border: 1px solid #d9d0e2; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.pager button.on { background: var(--purple, #6a2c91); border-color: var(--purple, #6a2c91); color: #fff; }
+.pager button:disabled { opacity: 0.4; cursor: default; }
+.pager .gap { padding: 0 4px; color: #8a8396; }

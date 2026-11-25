@@ -684,9 +684,15 @@ function ResultsAndRankings() {
 
 type AdminTournament = { id: string; title: string; played_on: string };
 
-// Skor programının .txt çıktısı + .dup dosyasından turnuva sonuç sayfası oluşturur.
+const PAGE_SIZE = 4;
+
+// Skor programının .txt / Lehman .xml çıktısı + .dup dosyasından turnuva sonuç sayfası oluşturur.
 function TournamentUpload() {
+  // Yayındaki sonuçlar: en yeni 4'ü, altında sayfa numaraları
   const [items, setItems] = useState<AdminTournament[]>([]);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
+  // Yükleme formu
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [data, setData] = useState<TournamentData | null>(null);
@@ -694,22 +700,28 @@ function TournamentUpload() {
   const [dupName, setDupName] = useState("");
   const [txt, setTxt] = useState<string | null>(null);
   const [dup, setDup] = useState<Uint8Array | null>(null);
+  const [inputKey, setInputKey] = useState(0); // artınca dosya seçicileri sıfırlanır
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(async () => {
-    const { data } = await getBrowserSupabase()
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const load = useCallback(async (p: number) => {
+    const from = p * PAGE_SIZE;
+    const { data, count } = await getBrowserSupabase()
       .from("tournaments")
-      .select("id,title,played_on")
+      .select("id,title,played_on", { count: "exact" })
       .not("data", "is", null)
       .order("played_on", { ascending: false })
-      .limit(50);
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
     setItems((data as AdminTournament[]) ?? []);
+    setTotal(count ?? 0);
   }, []);
   useEffect(() => {
-    load();
-  }, [load]);
+    load(page);
+  }, [load, page]);
 
   // Her dosya seçiminde iki dosyayı yeniden okuyup önizleme üretir.
   useEffect(() => {
@@ -728,15 +740,21 @@ function TournamentUpload() {
     }
   }, [txt, dup]);
 
+  // Dosya adından tarih ve parti numarası: "24-11-2026-2.xml" ya da "2026-11-24"
   function guessFromName(name: string) {
-    const m = /(20\d\d)[-_.]?(\d\d)[-_.]?(\d\d)/.exec(name);
-    if (m && !date) setDate(`${m[1]}-${m[2]}-${m[3]}`);
+    const dmy = /(\d{1,2})\D{1,2}(\d{1,2})\D{1,2}(20\d\d)(?:-(\d+))?/.exec(name);
+    const ymd = /(20\d\d)[-_.]?(\d\d)[-_.]?(\d\d)/.exec(name);
+    if (dmy) {
+      setDate((d) => d || `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`);
+      if (dmy[4]) setTitle((t) => t || `Lehman ${Number(dmy[4])}`);
+    } else if (ymd) {
+      setDate((d) => d || `${ymd[1]}-${ymd[2]}-${ymd[3]}`);
+    }
   }
 
   async function pickTxt(f: File | undefined) {
     if (!f) return;
     setTxtName(f.name);
-    guessFromName(f.name);
     const buf = new Uint8Array(await f.arrayBuffer());
     // Dosya UTF-8 değilse Türkçe Windows kodlamasıyla oku.
     let text: string;
@@ -745,6 +763,10 @@ function TournamentUpload() {
     } catch {
       text = new TextDecoder("windows-1254").decode(buf);
     }
+    // Lehman XML'inde tarih dosyanın içinde yazar; varsa onu kullan
+    const xmlDate = /<date>(\d{4}-\d{2}-\d{2})<\/date>/.exec(text);
+    if (xmlDate) setDate((d) => d || xmlDate[1]);
+    guessFromName(f.name);
     setTxt(text);
   }
 
@@ -753,6 +775,16 @@ function TournamentUpload() {
     setDupName(f.name);
     guessFromName(f.name);
     setDup(new Uint8Array(await f.arrayBuffer()));
+  }
+
+  function resetForm() {
+    setTitle("");
+    setDate("");
+    setTxt(null);
+    setDup(null);
+    setTxtName("");
+    setDupName("");
+    setInputKey((k) => k + 1);
   }
 
   async function save(e: React.FormEvent) {
@@ -768,25 +800,32 @@ function TournamentUpload() {
       setMsg(error.message);
       return;
     }
+    const published = `${title.trim()} (${formatDate(date)})`;
+    resetForm();
     setErr(false);
-    setMsg("Yayınlandı. Sonuç sayfası en geç 1 dakika içinde sitede görünür.");
-    setTitle("");
-    setTxt(null);
-    setDup(null);
-    setTxtName("");
-    setDupName("");
-    load();
+    setMsg(`${published} yayınlandı. Sonuç sayfası en geç 1 dakika içinde sitede görünür.`);
+    if (page === 0) load(0);
+    else setPage(0);
   }
 
   async function remove(t: AdminTournament) {
-    if (!confirm(`"${t.title}" sonuçları silinsin mi?`)) return;
+    if (!confirm(`"${t.title}" (${formatDate(t.played_on)}) sonuçları silinsin mi?`)) return;
     await getBrowserSupabase().from("tournaments").delete().eq("id", t.id);
-    load();
+    // Sayfadaki son kayıt silindiyse bir önceki sayfaya dön
+    if (items.length === 1 && page > 0) setPage(page - 1);
+    else load(page);
   }
 
   const ns = data?.pairs.find((p) => p.dir === "NS" && p.rank === 1);
   const ew = data?.pairs.find((p) => p.dir === "EW" && p.rank === 1);
   const withHands = data?.boards.filter((b) => b.hands).length ?? 0;
+
+  // Sayfa numaraları: ilk, son ve bulunulan sayfanın çevresi
+  const pageNumbers: (number | "…")[] = [];
+  for (let i = 0; i < pages; i++) {
+    if (i === 0 || i === pages - 1 || Math.abs(i - page) <= 1) pageNumbers.push(i);
+    else if (pageNumbers[pageNumbers.length - 1] !== "…") pageNumbers.push("…");
+  }
 
   return (
     <>
@@ -798,19 +837,25 @@ function TournamentUpload() {
         </p>
         <div className="field">
           <label htmlFor="t-txt">Sonuç dosyası (.txt ya da Lehman .xml)</label>
-          <input id="t-txt" type="file" accept=".txt,.xml,text/plain,text/xml,application/xml" onChange={(e) => pickTxt(e.target.files?.[0])} />
+          <input
+            key={`txt-${inputKey}`}
+            id="t-txt"
+            type="file"
+            accept=".txt,.xml,text/plain,text/xml,application/xml"
+            onChange={(e) => pickTxt(e.target.files?.[0])}
+          />
           {txtName && <span className="hint" style={{ margin: 0 }}>{txtName}</span>}
         </div>
         <div className="field">
           <label htmlFor="t-dup">El dosyası (.dup, isteğe bağlı)</label>
-          <input id="t-dup" type="file" accept=".dup" onChange={(e) => pickDup(e.target.files?.[0])} />
+          <input key={`dup-${inputKey}`} id="t-dup" type="file" accept=".dup" onChange={(e) => pickDup(e.target.files?.[0])} />
           {dupName && <span className="hint" style={{ margin: 0 }}>{dupName}</span>}
         </div>
         <div className="field">
           <label htmlFor="t-title">Turnuva adı</label>
           <input
             id="t-title"
-            placeholder="ör. Pazar Simultane"
+            placeholder="ör. Lehman 1 ya da Pazar Simultane"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -837,15 +882,24 @@ function TournamentUpload() {
           </div>
         )}
 
-        <button className="btn-admin" disabled={busy || !data || !date || !title.trim()}>
-          {busy ? "Yayınlanıyor..." : "Yayınla"}
-        </button>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button className="btn-admin" disabled={busy || !data || !date || !title.trim()}>
+            {busy ? "Yayınlanıyor..." : "Yayınla"}
+          </button>
+          {(txtName || dupName || title || date) && (
+            <button type="button" className="btn-edit" onClick={resetForm} disabled={busy}>
+              Temizle
+            </button>
+          )}
+        </div>
         {msg && <p className={`msg${err ? " err" : ""}`}>{msg}</p>}
       </form>
 
-      {items.length > 0 && (
+      {total > 0 && (
         <div className="panel">
-          <h2>Yayındaki sonuçlar</h2>
+          <h2>
+            Yayındaki sonuçlar <span className="hint" style={{ fontWeight: 400 }}>({total})</span>
+          </h2>
           <ul className="list">
             {items.map((t) => (
               <li key={t.id}>
@@ -853,13 +907,40 @@ function TournamentUpload() {
                   <strong>{t.title}</strong>
                   <span>{formatDate(t.played_on)}</span>
                 </div>
-                <a className="btn-edit" style={{ display: "inline-flex", alignItems: "center" }} href={`/sonuclar/${t.id}`} target="_blank" rel="noopener noreferrer">
+                <a
+                  className="btn-edit"
+                  style={{ display: "inline-flex", alignItems: "center" }}
+                  href={`/sonuclar/${t.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Gör
                 </a>
-                <button className="btn-del" onClick={() => remove(t)}>Sil</button>
+                <button className="btn-del" onClick={() => remove(t)}>
+                  Sil
+                </button>
               </li>
             ))}
           </ul>
+          {pages > 1 && (
+            <nav className="pager" aria-label="Sayfalar">
+              <button type="button" disabled={page === 0} onClick={() => setPage(page - 1)} aria-label="Önceki sayfa">
+                ‹
+              </button>
+              {pageNumbers.map((n, i) =>
+                n === "…" ? (
+                  <span key={`gap-${i}`} className="gap">…</span>
+                ) : (
+                  <button type="button" key={n} className={n === page ? "on" : undefined} onClick={() => setPage(n)}>
+                    {n + 1}
+                  </button>
+                )
+              )}
+              <button type="button" disabled={page >= pages - 1} onClick={() => setPage(page + 1)} aria-label="Sonraki sayfa">
+                ›
+              </button>
+            </nav>
+          )}
         </div>
       )}
     </>

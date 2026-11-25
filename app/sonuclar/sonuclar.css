@@ -380,10 +380,10 @@
 }
 
 /* Lehman masalar: kazanan / kaybeden taraf yumuşak renk */
-.match-table td.side-win { background: #f0f9f2; }
-.match-table td.side-lose { background: #fdf3f3; }
-.match-table .row-link:hover td.side-win { background: #e6f4ea; }
-.match-table .row-link:hover td.side-lose { background: #fbeaea; }
+.match-table td.side-win { background: #e1f3e6; }
+.match-table td.side-lose { background: #fbe4e4; }
+.match-table .row-link:hover td.side-win { background: #d4edda; }
+.match-table .row-link:hover td.side-lose { background: #f8d7d7; }
 .imp-total.side-win { color: #1e7a3c; font-weight: 800; }
 .imp-total.side-lose { color: #b3383e; }
 .match-table td.side-win + td.names, .match-table td.side-lose + td.names { border-left: 1px solid var(--line); }

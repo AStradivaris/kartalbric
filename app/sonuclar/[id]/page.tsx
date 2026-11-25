@@ -471,28 +471,31 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                     if (!ns || !ew) return null;
                     const nsWin = (ns.impFor ?? 0) > (ew.impFor ?? 0);
                     const ewWin = (ew.impFor ?? 0) > (ns.impFor ?? 0);
+                    // Kazanan taraf açık yeşil, kaybeden açık kırmızı (berabere: renksiz)
+                    const nsCls = nsWin ? "side-win" : ewWin ? "side-lose" : "";
+                    const ewCls = ewWin ? "side-win" : nsWin ? "side-lose" : "";
                     return (
                       <tr key={tno} className="row-link">
                         {/* Satırın her hücresi maçın içine götürür */}
                         <td className="rank"><a href={matchHref(tno)} className="cell-link">{tno}</a></td>
-                        <td className="names">
+                        <td className={`names ${nsCls}`}>
                           <a href={matchHref(tno)} className="cell-link pl-links">
                             {ns.names.map((n, k) => (
                               <span key={k}>{n}</span>
                             ))}
                           </a>
                         </td>
-                        <td className={`num imp-total${nsWin ? " win" : ""}`}>
+                        <td className={`num imp-total ${nsCls}`}>
                           <a href={matchHref(tno)} className="cell-link">{fmtNum(ns.impFor ?? 0, 2)}</a>
                         </td>
-                        <td className="names">
+                        <td className={`names ${ewCls}`}>
                           <a href={matchHref(tno)} className="cell-link pl-links">
                             {ew.names.map((n, k) => (
                               <span key={k}>{n}</span>
                             ))}
                           </a>
                         </td>
-                        <td className={`num imp-total${ewWin ? " win" : ""}`}>
+                        <td className={`num imp-total ${ewCls}`}>
                           <a href={matchHref(tno)} className="cell-link">{fmtNum(ew.impFor ?? 0, 2)}</a>
                         </td>
                       </tr>

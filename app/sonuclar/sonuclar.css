@@ -411,3 +411,17 @@
   .match-boards th, .match-boards td { padding: 9px 14px; }
   .table-wrap:has(.match-boards) + .small { text-align: center; }
 }
+
+/* Simultane sıralama ve çift özeti: bilgisayarda içerik genişliğinde ve ortalı */
+@media (min-width: 721px) {
+  .rank-block:has(.ranking) { width: fit-content; min-width: 460px; max-width: 100%; margin-left: auto; margin-right: auto; }
+  .rank-block:has(.ranking) .table-wrap { width: 100%; }
+  .ranking { width: 100%; }
+  .ranking th, .ranking td { padding: 10px 16px; }
+  .ranking .names { min-width: 300px; }
+  .pair-card { max-width: 680px; margin-left: auto; margin-right: auto; }
+  .table-wrap:has(.pair-table) { width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; }
+  .pair-table { width: auto; }
+  .pair-table th, .pair-table td { padding: 9px 14px; }
+  .table-wrap:has(.pair-table) + .small { text-align: center; }
+}

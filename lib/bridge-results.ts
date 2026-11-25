@@ -29,6 +29,8 @@ export type LehmanPlayer = {
   imp: number; // oturduğu tarafın net IMP'si
   impFor?: number;
   impAgainst?: number;
+  vugraph?: number; // Vugraph dosyasındaki Lehman (kulübün hesabı "lehman" alanında)
+  delta?: number; // bu partideki Lehman değişimi (kulübün hesabı)
 };
 
 export type BoardResult = {

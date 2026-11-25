@@ -221,5 +221,7 @@ export async function getLehmanTournaments(): Promise<import("./lehman-stats").L
     .eq("data->>kind", "lehman")
     .order("played_on", { ascending: true })
     .order("created_at", { ascending: true });
-  return (data as import("./lehman-stats").LehmanTournament[]) ?? [];
+  // Lehman puanları kulübün kendi formülüyle yeniden hesaplanır (lib/lehman-stats.ts)
+  const { applyClubLehman } = await import("./lehman-stats");
+  return applyClubLehman((data as import("./lehman-stats").LehmanTournament[]) ?? []);
 }

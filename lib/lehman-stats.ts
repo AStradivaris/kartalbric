@@ -40,6 +40,47 @@ export type PlayerStats = {
   worstOpponent: PersonStat | null;
 };
 
+// ---- Kulübün kendi Lehman hesabı ----
+// Herkes 50 ile başlar; her partiden sonra
+//   yeni = eski + K × (gerçek% − beklenen%)
+//   gerçek%   = 50 + (board başına net IMP × 20/3)
+//   beklenen% = çiftin puan toplamı / masadaki dört oyuncunun toplamı × 100
+// Puan ay başında sıfırlanmaz. Vugraph'ın verdiği değer "vugraph" alanında saklanır.
+export const LEHMAN_START = 50;
+export const LEHMAN_K = 0.06;
+
+export function applyClubLehman(list: LehmanTournament[]): LehmanTournament[] {
+  const rating = new Map<string, number>();
+  return sorted(list).map((t) => {
+    const players = (t.data.players ?? []).map((p) => ({ ...p }));
+    const nb = t.data.boards.length || 1;
+    const tables = [...new Set(players.map((p) => p.table))];
+    const updates = new Map<LehmanPlayer, { lehman: number; delta: number }>();
+    for (const tb of tables) {
+      const ps = players.filter((p) => p.table === tb);
+      const pre = new Map(ps.map((p) => [p, rating.get(nameKey(p.name)) ?? LEHMAN_START]));
+      const total = [...pre.values()].reduce((a, b) => a + b, 0);
+      for (const p of ps) {
+        const side = ps.filter((q) => SIDE_OF[q.seat] === SIDE_OF[p.seat]);
+        const own = side.reduce((a, q) => a + pre.get(q)!, 0);
+        const expected = total > 0 && ps.length === 4 ? (own / total) * 100 : 50;
+        const actual = 50 + (p.imp / nb) * (20 / 3);
+        const delta = LEHMAN_K * (actual - expected);
+        updates.set(p, { lehman: pre.get(p)! + delta, delta });
+      }
+    }
+    for (const p of players) {
+      const u = updates.get(p);
+      if (!u) continue;
+      p.vugraph = p.lehman;
+      p.lehman = Math.round(u.lehman * 100) / 100;
+      p.delta = Math.round(u.delta * 100) / 100;
+      rating.set(nameKey(p.name), u.lehman);
+    }
+    return { ...t, data: { ...t.data, players } };
+  });
+}
+
 /** İsimleri karşılaştırmak için: küçük harf, tek boşluk */
 export const nameKey = (n: string) => n.replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR");
 
@@ -70,6 +111,7 @@ function sorted(list: LehmanTournament[]) {
 export function playerStats(list: LehmanTournament[], name: string): PlayerStats | null {
   const key = nameKey(name);
   const matches: PlayerMatch[] = [];
+  const deltas: (number | undefined)[] = [];
   let shownName = name;
 
   for (const t of sorted(list)) {
@@ -77,6 +119,7 @@ export function playerStats(list: LehmanTournament[], name: string): PlayerStats
     const me = players.find((p) => nameKey(p.name) === key);
     if (!me) continue;
     shownName = me.name;
+    deltas.push(me.delta);
     const atTable = players.filter((p) => p.table === me.table);
     const partner = atTable.find((p) => p.seat === PARTNER[me.seat]);
     const opponents = atTable.filter((p) => SIDE_OF[p.seat] !== SIDE_OF[me.seat]);
@@ -98,8 +141,9 @@ export function playerStats(list: LehmanTournament[], name: string): PlayerStats
   }
   if (matches.length === 0) return null;
 
-  for (let i = 1; i < matches.length; i++) {
-    matches[i].change = Math.round((matches[i].lehman - matches[i - 1].lehman) * 100) / 100;
+  for (let i = 0; i < matches.length; i++) {
+    if (deltas[i] !== undefined) matches[i].change = deltas[i]!;
+    else if (i > 0) matches[i].change = Math.round((matches[i].lehman - matches[i - 1].lehman) * 100) / 100;
   }
   const changes = matches.map((m) => m.change).filter((c): c is number => c !== null);
 
@@ -166,7 +210,7 @@ export type MonthlyRow = {
 export function monthlyRanking(list: LehmanTournament[], y: number, m: number): MonthlyRow[] {
   const prefix = `${y}-${String(m).padStart(2, "0")}`;
   const before = new Map<string, number>(); // ay öncesindeki son puan
-  const rows = new Map<string, MonthlyRow & { first: number }>();
+  const rows = new Map<string, MonthlyRow & { first: number; deltaSum?: number }>();
   for (const t of sorted(list)) {
     const inMonth = t.played_on.startsWith(prefix);
     const after = t.played_on.slice(0, 7) > prefix;
@@ -183,6 +227,7 @@ export function monthlyRanking(list: LehmanTournament[], y: number, m: number): 
       r.matches++;
       if (p.imp > 0) r.won++;
       r.imp = Math.round((r.imp + p.imp) * 100) / 100;
+      if (p.delta !== undefined) r.deltaSum = (r.deltaSum ?? 0) + p.delta;
       rows.set(k, r);
     }
   }
@@ -190,11 +235,17 @@ export function monthlyRanking(list: LehmanTournament[], y: number, m: number): 
     .map(([k, r]) => {
       const start = before.get(k);
       const base = start ?? (r.matches > 1 ? r.first : null);
+      const change =
+        r.deltaSum !== undefined
+          ? Math.round(r.deltaSum * 100) / 100
+          : base === null
+            ? null
+            : Math.round((r.lehman - base) * 100) / 100;
       return {
         name: r.name,
         lehman: r.lehman,
-        change: base === null ? null : Math.round((r.lehman - base) * 100) / 100,
-        fromFirst: start === undefined,
+        change,
+        fromFirst: r.deltaSum === undefined && start === undefined,
         matches: r.matches,
         won: r.won,
         imp: r.imp,

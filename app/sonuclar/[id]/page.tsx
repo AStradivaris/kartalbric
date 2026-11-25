@@ -372,7 +372,57 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   return (
     <>
       {head}
-      {(["NS", "EW"] as const).map((dir) => (
+      {lehman && (
+        <section className="rank-block">
+          <h2>Masalar</h2>
+          <div className="table-wrap">
+            <table className="res-table match-table">
+              <thead>
+                <tr>
+                  <th>Masa</th>
+                  <th>Kuzey - Güney</th>
+                  <th className="num">IMP</th>
+                  <th>Doğu - Batı</th>
+                  <th className="num">IMP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...new Set(pairs.map((p) => p.table ?? 0))]
+                  .sort((a, b) => a - b)
+                  .map((tno) => {
+                    const ns = pairs.find((p) => p.table === tno && p.dir === "NS");
+                    const ew = pairs.find((p) => p.table === tno && p.dir === "EW");
+                    if (!ns || !ew) return null;
+                    const nsWin = (ns.impFor ?? 0) > (ew.impFor ?? 0);
+                    const ewWin = (ew.impFor ?? 0) > (ns.impFor ?? 0);
+                    return (
+                      <tr key={tno}>
+                        <td className="rank">{tno}</td>
+                        <td className="names">
+                          <a href={`${base}?cift=${ns.id}`}>
+                            {ns.names.map((n, k) => (
+                              <span key={k}>{n}</span>
+                            ))}
+                          </a>
+                        </td>
+                        <td className={`num imp-total${nsWin ? " win" : ""}`}>{fmtNum(ns.impFor ?? 0, 2)}</td>
+                        <td className="names">
+                          <a href={`${base}?cift=${ew.id}`}>
+                            {ew.names.map((n, k) => (
+                              <span key={k}>{n}</span>
+                            ))}
+                          </a>
+                        </td>
+                        <td className={`num imp-total${ewWin ? " win" : ""}`}>{fmtNum(ew.impFor ?? 0, 2)}</td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+      {!lehman && (["NS", "EW"] as const).map((dir) => (
         <section key={dir} className="rank-block">
           <h2>{dir === "NS" ? "Kuzey - Güney" : "Doğu - Batı"}</h2>
           <div className="table-wrap">

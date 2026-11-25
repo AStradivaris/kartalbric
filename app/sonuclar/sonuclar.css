@@ -299,3 +299,21 @@
   .lehman-chart .axis { font-size: 13px; }
   .lehman-chart .val { font-size: 14px; }
 }
+
+/* Lehman masa sonuçları */
+.match-table .rank { font-weight: 800; width: 56px; }
+.match-table .names { white-space: normal; }
+.match-table .names a { color: var(--ink); display: flex; flex-wrap: wrap; column-gap: 6px; font-weight: 600; }
+.match-table .names a span:not(:last-child)::after { content: " -"; }
+.match-table .names a:hover { color: var(--purple); }
+.imp-total { font-weight: 700; color: #6b6478; width: 76px; }
+.imp-total.win { color: #1e7a3c; font-weight: 800; }
+@media (max-width: 720px) {
+  .match-table { table-layout: fixed; font-size: 12.5px; }
+  .match-table th, .match-table td { padding: 8px 5px; }
+  .match-table th { font-size: 10px; letter-spacing: 0; }
+  .match-table th:nth-child(1) { width: 34px; }
+  .match-table th:nth-child(3), .match-table th:nth-child(5) { width: 44px; }
+  .match-table .names a { flex-direction: column; }
+  .match-table .names a span:not(:last-child)::after { content: ""; }
+}

@@ -36,8 +36,9 @@ function LehmanChart({ matches }: { matches: PlayerMatch[] }) {
   const H = 230;
   const pad = { l: 34, r: 22, t: 26, b: 30 };
   const vals = matches.map((m) => m.lehman);
-  let lo = Math.floor(Math.min(...vals) - 0.5);
-  let hi = Math.ceil(Math.max(...vals) + 0.5);
+  // 50 çizgisi (ay başlangıcı) her zaman görünsün
+  let lo = Math.floor(Math.min(...vals, 50) - 0.5);
+  let hi = Math.ceil(Math.max(...vals, 50) + 0.5);
   if (hi - lo < 4) {
     const mid = (hi + lo) / 2;
     lo = Math.floor(mid - 2);
@@ -54,7 +55,17 @@ function LehmanChart({ matches }: { matches: PlayerMatch[] }) {
   const labelled = new Set([n - 1, maxI, minI, 0]);
   const xEvery = Math.max(1, Math.ceil(n / 6));
   const labels = dateLabels(matches);
-  const path = matches.map((m, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(m.lehman).toFixed(1)}`).join(" ");
+  // Her ay ayrı çizgi: ay başında puan 50'ye döndüğü için aylar birleştirilmez
+  const path = matches
+    .map((m, i) => {
+      const newMonth = i === 0 || matches[i - 1].date.slice(0, 7) !== m.date.slice(0, 7);
+      return `${newMonth ? "M" : "L"}${x(i).toFixed(1)},${y(m.lehman).toFixed(1)}`;
+    })
+    .join(" ");
+  // Ay sınırları: ince dikey çizgi
+  const monthStarts = matches
+    .map((m, i) => (i > 0 && matches[i - 1].date.slice(0, 7) !== m.date.slice(0, 7) ? i : -1))
+    .filter((i) => i > 0);
 
   return (
     <figure className="lehman-chart">
@@ -67,6 +78,10 @@ function LehmanChart({ matches }: { matches: PlayerMatch[] }) {
             </text>
           </g>
         ))}
+        {monthStarts.map((i) => (
+          <line key={i} x1={(x(i - 1) + x(i)) / 2} x2={(x(i - 1) + x(i)) / 2} y1={pad.t} y2={H - pad.b} className="month-sep" />
+        ))}
+        <line x1={pad.l} x2={W - pad.r} y1={y(50)} y2={y(50)} className="base50" />
         {n > 1 && <path d={path} className="line" />}
         {matches.map((m, i) => (
           <g key={i} className="pt">

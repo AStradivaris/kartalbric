@@ -45,13 +45,20 @@ export type PlayerStats = {
 //   yeni = eski + K × (gerçek% − beklenen%)
 //   gerçek%   = 50 + (board başına net IMP × 20/3)
 //   beklenen% = çiftin puan toplamı / masadaki dört oyuncunun toplamı × 100
-// Puan ay başında sıfırlanmaz. Vugraph'ın verdiği değer "vugraph" alanında saklanır.
+// Her ayın başında herkes yeniden 50'den başlar (aylık Lehman).
+// Vugraph'ın verdiği değer "vugraph" alanında saklanır.
 export const LEHMAN_START = 50;
 export const LEHMAN_K = 0.06;
 
 export function applyClubLehman(list: LehmanTournament[]): LehmanTournament[] {
   const rating = new Map<string, number>();
+  let month = "";
   return sorted(list).map((t) => {
+    // Yeni ay: puanlar sıfırlanır, herkes LEHMAN_START ile başlar
+    if (t.played_on.slice(0, 7) !== month) {
+      month = t.played_on.slice(0, 7);
+      rating.clear();
+    }
     const players = (t.data.players ?? []).map((p) => ({ ...p }));
     const nb = t.data.boards.length || 1;
     const tables = [...new Set(players.map((p) => p.table))];

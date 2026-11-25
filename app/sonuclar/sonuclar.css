@@ -397,3 +397,6 @@
 /* Sonuç sayfalarının alt bilgisi: açık ve sade */
 .footer.res-footer { background: #f6f2f9; color: #6b6478; border-top: 1px solid var(--line); }
 .footer.res-footer span { color: #6b6478; }
+
+.lehman-chart .month-sep { stroke: #d9cfe3; stroke-width: 1; stroke-dasharray: 3 3; }
+.lehman-chart .base50 { stroke: #c9bdd6; stroke-width: 1; }

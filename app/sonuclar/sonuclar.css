@@ -333,11 +333,13 @@
   .match-table .cell-link.pl-links span:not(:last-child)::after { content: ""; }
 }
 .lehman-rank-btn {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px;
-  padding: 16px 20px; border-radius: 14px; background: var(--purple); color: #fff !important; font-size: 22px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px;
+  padding: 10px 14px; border-radius: 12px; background: #f6f1fa; border: 1px solid #e6dbef;
+  color: var(--purple) !important; font-size: 18px;
 }
-.lehman-rank-btn strong { display: block; font-size: 17px; }
-.lehman-rank-btn small { display: block; font-size: 13px; opacity: 0.85; font-weight: 500; }
+.lehman-rank-btn:hover { background: #efe6f6; }
+.lehman-rank-btn strong { display: block; font-size: 15px; }
+.lehman-rank-btn small { display: block; font-size: 12px; color: var(--muted); font-weight: 500; }
 
 /* Lehman maç ekranı */
 .match-card { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--tint); margin-bottom: 16px; }

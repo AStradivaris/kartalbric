@@ -441,9 +441,15 @@
 /* Orta genişlik (tablet / küçük dizüstü): sade masalar tablosu yayılmasın, ortalı dursun */
 @media (min-width: 721px) and (max-width: 1180px) {
   .table-wrap:has(.traveller-m) { width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; }
-  .traveller-m { width: auto; table-layout: auto; font-size: 13.5px; }
-  .traveller-m th, .traveller-m td { padding: 9px 14px; }
-  .traveller-m th { font-size: 11px; }
-  .traveller-m .tr-names a { font-size: 12.5px; }
+  .traveller-m { width: auto; table-layout: auto; font-size: 15.5px; }
+  .traveller-m th, .traveller-m td { padding: 10px 16px; }
+  .traveller-m th { font-size: 12px; }
+  .traveller-m .tr-names a { font-size: 14.5px; line-height: 1.35; }
+  .traveller-m .m-pct .pct { font-size: 13.5px; padding: 2px 7px; }
+  .board-left h3 { font-size: 18px; }
   .board-left h3, .board-left .small { text-align: center; }
+  .board-left .small { font-size: 14px; }
+  /* Solver de ortada dursun */
+  .board-right .solver-box { max-width: 816px; margin-left: auto; margin-right: auto; border: 1px solid var(--line); border-radius: 14px; }
+  .board-right .solver-link { display: block; text-align: center; font-size: 15px; }
 }
